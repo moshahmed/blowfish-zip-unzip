@@ -601,27 +601,27 @@ local int testkey(__G__ h, key)
     init_keys(__G__ key);
     memcpy(hh, h, RAND_HEAD_LEN);
 
-    // Decrypt the header[4..11] with bf+salt=hh[0..3]+iv=0
-    // So crc is available with bf+salt+password.
+    /* Decrypt the header[4..11] with bf+salt=hh[0..3]+iv=0 */
+    /* So crc is available with bf+salt+password. */
     memset(&fh, 0, sizeof(fh));
     memcpy(&fh.salt, hh, 4);
     hash_salt_pass((char*)key, &fh);
-	memset(&fh, 0, sizeof(fh)); // clear_key_mem
+    memset(&fh, 0, sizeof(fh)); /* clear_key_mem */
     bf_d_cblock(hh+4);
  
     /* Use the encrypted random header[12] as salt and iv for bfunzip */
     memcpy(&fh, hh, RAND_HEAD_LEN);
     hash_salt_pass((char*)key, &fh);
-	memset(&fh, 0, sizeof(fh)); // clear_key_mem
+    memset(&fh, 0, sizeof(fh)); /* clear_key_mem */
 
-    // decode the header[0..11]
+    /* decode the header[0..11] */
     /* check password */
     for (n = 0; n < RAND_HEAD_LEN; n++) {
         zdecode(hh[n]);
         Trace((stdout, " %02x", hh[n]));
     }
 
-    // Check the crc in header
+    /* Check the crc in header */
     Trace((stdout,
       "\n  lrec.crc= %08lx  crec.crc= %08lx  pInfo->ExtLocHdr= %s\n",
       GLOBAL(lrec.crc32), GLOBAL(pInfo->crc),
@@ -643,8 +643,7 @@ local int testkey(__G__ h, key)
                            (ush)(GLOBAL(lrec.crc32) >> 16)))
         return -1;  /* bad */
 #else
-    // b has crc[0] inverted to avoid false positive matches.
-    // hh[RAND_HEAD_LEN-1] ^= 0xff; // crc[0]
+    /* b has crc[0] */
     b = hh[RAND_HEAD_LEN-1];
     Trace((stdout, "  b = %02x  (crc >> 24) = %02x  (lrec.time >> 8) = %02x\n",
       b, (ush)(GLOBAL(lrec.crc32) >> 24),
@@ -659,7 +658,7 @@ local int testkey(__G__ h, key)
              (int)GLOBAL(csize) : GLOBAL(incnt),
            p = GLOBAL(inptr); n--; p++)
     {
-          // zdecode(*p) expands to update_keys( *p ^= decrypt_byte()); 
+          /* zdecode(*p) expands to update_keys( *p ^= decrypt_byte()); */
           BF_ZDECODE(*p);
     }
     return 0;       /* OK */

@@ -1,7 +1,7 @@
 /*
-// Blowfish encryption for zip and vim; in Blowfish output feedback mode.
-// GPL(C) moshahmed/at/gmail
-// Based on http://www.schneier.com/blowfish.html by Bruce Schneier
+Blowfish encryption for zip and vim; in Blowfish output feedback mode.
+GPL(C) moshahmed/at/gmail
+Based on http://www.schneier.com/blowfish.html by Bruce Schneier
 */
 
 #ifndef BLOWFISH_VERSION

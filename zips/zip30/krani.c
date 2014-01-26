@@ -1,7 +1,7 @@
 /* 
-// Knuth's random number generator.
-// From http://www-cs-faculty.stanford.edu/~uno/programs/rng.c 
-// Additions GPL(C) moshahmed/at/gmail
+Knuth's random number generator.
+From http://www-cs-faculty.stanford.edu/~uno/programs/rng.c 
+Additions GPL(C) moshahmed/at/gmail
 */
 #include "krani.h"
 
@@ -14,8 +14,8 @@ static long ran_x[KK];                    /* the generator state */
 
 static void ran_array(long aa[],int n) {
   /* put n new random numbers in aa */
-  // long *aa;   /* destination */
-  // int n;      /* array length (must be at least KK) */
+  /* long *aa;   ..  destination */
+  /* int n;      ..  array length (must be at least KK) */
   register int i,j;
   for (j=0;j<KK;j++) aa[j]=ran_x[j];
   for (;j<n;j++) aa[j]=mod_diff(aa[j-KK],aa[j-LL]);
@@ -35,9 +35,8 @@ long *ran_arr_ptr=&ran_arr_dummy; /* the next random number, or -1 */
 #define is_odd(x)  ((x)&1)          /* units bit of x */
 #define evenize(x) ((x)&(MM-2))   /* make x even */
 
-static void ran_start(long seed) {
-  // void ran_start(seed)    /* do this before using ran_array */
-  // long seed;            /* selector for different streams */
+static void ran_start(long seed) { /* do this before using ran_array */
+  /* long seed;            .. selector for different streams */
   register int t,j;
   long x[KK+KK-1];              /* the preparation buffer */
   register long ss=evenize(seed+2);

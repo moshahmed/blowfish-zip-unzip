@@ -1,13 +1,12 @@
 /*
-//  $Header: c:/cvs/repo/src/zips/zip30/sha256.c,v 1.10 2014-01-25 02:53:06 a Exp $
-//  FIPS-180-2 compliant SHA-256 implementation
-//  GPL by Christophe Devine.
-//  Modified for md5deep, in public domain.
-//  Modified For Vim and Zip, GPL(C) moshahmed/at/gmail
-//
-//   . sha256_self_test() is implicitly called once.
-//   . sha256_key() hashes the password to 64 bytes char string.
-//   . sha256_{begin,continue,end}, not thread safe.
+$Header: c:/cvs/repo/src/zips/zip30/sha256.c,v 1.11 2014-01-26 03:03:41 a Exp $
+FIPS-180-2 compliant SHA-256 implementation
+GPL by Christophe Devine.
+Modified for md5deep, in public domain.
+Modified For Vim and Zip, GPL(C) moshahmed/at/gmail
+. sha256_self_test() is implicitly called once.
+. sha256_key() hashes the password to 64 bytes char string.
+. sha256_{begin,continue,end}, not thread safe.
 */
 
 #include <string.h>
@@ -316,7 +315,7 @@ void sha256_key(char *buf, char *salt, int salt_len, char* hexit, int hexit_len)
   hexit[hexit_len-1]='\0';
 }
 
-// SHA_SELF_TEST
+/* SHA_SELF_TEST */
 
 /* These are the standard FIPS-180-2 test vectors */
 static char *sha_self_test_msg[] = {

@@ -1,8 +1,8 @@
 /*
-// $Header: c:/cvs/repo/src/zips/zip30/blowfish.c,v 1.13 2014-01-25 04:02:52 a Exp $
-// Blowfish encryption for vim; in Blowfish output feedback mode.
-// Modified for vim and zip, GPL(C) moshahmed/at/gmail
-// Based on http://www.schneier.com/blowfish.html by Bruce Schneier.
+$Header: c:/cvs/repo/src/zips/zip30/blowfish.c,v 1.14 2014-01-26 03:03:41 a Exp $
+Blowfish encryption for vim; in Blowfish output feedback mode.
+Modified for vim and zip, GPL(C) moshahmed/at/gmail
+Based on http://www.schneier.com/blowfish.html by Bruce Schneier.
 */
 
 #include <stdio.h>
@@ -377,7 +377,7 @@ void bf_key_init(uint8_t *password, uint8_t *salt, int salt_len) {
         sha256_key(hexit, (char*) salt, salt_len, hexit, sizeof(hexit));
     }
 
-    // convert the key from 64 hex chars to 32 binary chars.
+    /* convert the key from 64 hex chars to 32 binary chars. */
     keylen = (int) strlen((char*) hexit)/2;
     for (i=0; i<keylen; i++) {
         sscanf(&key[i*2], "%2x", &j);
@@ -447,8 +447,10 @@ typedef struct {
     uint32_t keysum;
 } struct_bf_test_data;
 
-// Assert bf(password, plaintxt) is cryptxt.
-// Assert csum(pax sbx(password)) is keysum.
+/*
+Assert bf(password, plaintxt) is cryptxt. 
+Assert csum(pax sbx(password)) is keysum.
+*/
 static struct_bf_test_data bf_test_data[] = {
   {
       "p\x01\x02\x03\x04\x005\x006",
@@ -475,7 +477,7 @@ int bf_self_test(void) {
         if (!bf_check_tables(pax, sbx, bf_test_data[i].keysum)) {
             err++;
         }
-        // Dont modify bf_test_data[i].plaintxt, self test is idempotent.
+        /* Dont modify bf_test_data[i].plaintxt, self test is idempotent. */
         memcpy(bk.uc, bf_test_data[i].plaintxt, 8);
         bf_e_cblock(bk.uc);
         if (memcmp(bk.uc, bf_test_data[i].cryptxt, 8) != 0) {
@@ -543,7 +545,7 @@ void print_block8(char *message, block8 block) {
       printfd(("block: %10s:", message));
       for(k=0; k<8; k++) {
           printfd(("%02x ", block.uc[k]));
-          // if (k%2==1) printfd((" "));
+          /* if (k%2==1) printfd((" ")); */
           if (k%4==3) printfd((" "));
       }
       printfd(("\n"));

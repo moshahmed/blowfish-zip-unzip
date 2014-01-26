@@ -22,7 +22,6 @@
 #  define UZ_VERSION_DATE   "17 Apr 09"         /* internal beta version */
 #else
 #  define UZ_BETALEVEL      ""
-// #define UZ_VERSION_DATE   "20 April 2009"     /* official release version */
 #  define UZ_VERSION_DATE   __DATE__  " " __TIME__  /* blowfish version */
 #  define RELEASE
 #endif

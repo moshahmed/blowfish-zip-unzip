@@ -228,7 +228,7 @@ void crypthead(passwd, crc)
     }
     init_keys(passwd);
 
-    // Create random header[12]
+    /* Create random header[12] */
     for (n = 0; n < RAND_HEAD_LEN-2; n++) {
         c = (rand() >> 7) & 0xff;
         c ^= knuth_rand() & 0xff;
@@ -247,17 +247,17 @@ void crypthead(passwd, crc)
     /* Use the encrypted random header[12] as salt and iv for bfzip */
     memcpy(&fh, header, RAND_HEAD_LEN);
 
-    // Encrypt the header[4..11] with bf9(salt,header[0..3],iv=0)
-    // Protect crc with bf(salt,password,iv=0)
+    /* Encrypt the header[4..11] with bf9(salt,header[0..3],iv=0) */
+    /* Protect crc with bf(salt,password,iv=0) */
     memset(&fh2, 0, sizeof(fh2));
     memcpy(&fh2.salt, header, 4);
     hash_salt_pass((char*)passwd, &fh2);
     memset(&fh2, 0, sizeof(fh2)); // clear_key
     bf_e_cblock(header+4);
  
-	// Hairy code, fh was saved earlier and used below,
-	// because blowfish algorithm maintains state in static data
-	// and so it cannot encrypt with multiple keys in parallel.
+    /* Hairy code, fh was saved earlier and used below, */
+    /* because blowfish algorithm maintains state in static data */
+    /* and so it cannot encrypt with multiple keys in parallel. */
     hash_salt_pass((char*)passwd, &fh);
     memset(&fh, 0, sizeof(fh)); // clear_key
 
@@ -496,7 +496,7 @@ unsigned zfwrite(buf, item_size, nb)
 
         /* Encrypt data in buffer */
         for (size = item_size*(ulg)nb; size != 0; p++, size--) {
-            // *p = (char)zencode(*p, t);
+            /* *p = (char)zencode(*p, t); */
             *p = (char) BF_ZENCODE(*p, t);
         }
     }
