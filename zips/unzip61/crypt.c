@@ -601,18 +601,22 @@ local int testkey(__G__ h, key)
     init_keys(__G__ key);
     memcpy(hh, h, RAND_HEAD_LEN);
 
-    /* Decrypt the header[4..11] with bf+salt=hh[0..3]+iv=0 */
-    /* So crc is available with bf+salt+password. */
-    memset(&fh, 0, sizeof(fh));
-    memcpy(&fh.salt, hh, 4);
-    hash_salt_pass((char*)key, &fh);
-    memset(&fh, 0, sizeof(fh)); /* clear_key_mem */
-    bf_d_cblock(hh+4);
- 
-    /* Use the encrypted random header[12] as salt and iv for bfunzip */
-    memcpy(&fh, hh, RAND_HEAD_LEN);
-    hash_salt_pass((char*)key, &fh);
-    memset(&fh, 0, sizeof(fh)); /* clear_key_mem */
+#ifdef HAVE_BLOWFISH
+    if (use_blowfish){
+        /* Decrypt the header[4..11] with bf+salt=hh[0..3]+iv=0 */
+        /* So crc is available with bf+salt+password. */
+        memset(&fh, 0, sizeof(fh));
+        memcpy(&fh.salt, hh, 4);
+        hash_salt_pass((char*)key, &fh);
+        memset(&fh, 0, sizeof(fh)); /* clear_key_mem */
+        bf_d_cblock(hh+4);
+     
+        /* Use the encrypted random header[12] as salt and iv for bfunzip */
+        memcpy(&fh, hh, RAND_HEAD_LEN);
+        hash_salt_pass((char*)key, &fh);
+        memset(&fh, 0, sizeof(fh)); /* clear_key_mem */
+    }
+#endif
 
     /* decode the header[0..11] */
     /* check password */
@@ -658,8 +662,12 @@ local int testkey(__G__ h, key)
              (int)GLOBAL(csize) : GLOBAL(incnt),
            p = GLOBAL(inptr); n--; p++)
     {
-          /* zdecode(*p) expands to update_keys( *p ^= decrypt_byte()); */
-          BF_ZDECODE(*p);
+         #ifdef HAVE_BLOWFISH
+         if (use_blowfish) {
+           BF_ZDECODE(*p);
+         }else
+         #endif
+           zdecode(*p);
     }
     return 0;       /* OK */
 

@@ -2,6 +2,7 @@
 Knuth's random number generator.
 From http://www-cs-faculty.stanford.edu/~uno/programs/rng.c 
 Additions GPL(C) moshahmed/at/gmail
+$Header: c:/cvs/repo/src/zips/zip30/krani.c,v 1.6 2014-01-27 14:50:24 a Exp $ 
 */
 #include "krani.h"
 

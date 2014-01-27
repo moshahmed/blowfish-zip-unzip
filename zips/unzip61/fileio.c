@@ -656,7 +656,12 @@ int readbyte(__G)   /* refill inbuf and return a byte if available, else EOF */
          */
         for (n = G.incnt, p = G.inptr;  n--;  p++)
         {
-            BF_ZDECODE(*p); // zdecode(*p);
+            #ifdef HAVE_BLOWFISH
+            if (use_blowfish) {
+              BF_ZDECODE(*p); 
+            }else
+            #endif
+            zdecode(*p);
         }
     }
 #endif /* CRYPT */
@@ -693,7 +698,12 @@ int fillinbuf(__G) /* like readbyte() except returns number of bytes in inbuf */
 
         for (n = G.incnt, p = G.inptr;  n--;  p++)
         {
-            BF_ZDECODE(*p); // zdecode(*p);
+            #ifdef HAVE_BLOWFISH
+            if (use_blowfish) {
+               BF_ZDECODE(*p); 
+            } else
+            #endif
+              zdecode(*p);
         }
     }
 #endif /* CRYPT */

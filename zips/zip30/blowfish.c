@@ -1,8 +1,8 @@
 /*
-$Header: c:/cvs/repo/src/zips/zip30/blowfish.c,v 1.14 2014-01-26 03:03:41 a Exp $
 Blowfish encryption for vim; in Blowfish output feedback mode.
 Modified for vim and zip, GPL(C) moshahmed/at/gmail
 Based on http://www.schneier.com/blowfish.html by Bruce Schneier.
+$Header: c:/cvs/repo/src/zips/zip30/blowfish.c,v 1.15 2014-01-27 14:50:23 a Exp $
 */
 
 #include <stdio.h>
@@ -537,7 +537,9 @@ uint8_t bf_ranbyte(void) {
 #define printfr(x)  printf x
 #endif
 
+int use_blowfish=0;
 int bf_verbose=0;
+
 local_function
 void print_block8(char *message, block8 block) {
   int k;

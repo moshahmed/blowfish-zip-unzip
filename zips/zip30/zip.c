@@ -27,6 +27,7 @@
 #include "revision.h"
 #include "crc32.h"
 #include "crypt.h"
+#include "blowfish.h"
 #include "ttyio.h"
 #include <ctype.h>
 #include <errno.h>
@@ -659,9 +660,12 @@ local void help()
 #  endif
 #else /* !AMIGA */
 #  if CRYPT
-"  -e   encrypt with blowfish        -n   don't compress these suffixes"
+"  -e   encrypt                      -n   don't compress these suffixes"
+#     ifdef HAVE_BLOWFISH
+,"  --blowfish  encrypt with blowfish, use with -e and -P password  "
+#     endif 
 #  else
-"  -h   show this help               -n   don't compress these suffixes"
+,"  -h   show this help               -n   don't compress these suffixes"
 #  endif
 #endif /* ?AMIGA */
 #ifdef RISCOS
@@ -846,8 +850,11 @@ local void help_extended()
 "              bzip2 - use bzip2 compression (need modern unzip)",
 "",
 "Encryption:",
-"  -e        use blowfish strong encryption, prompt for password",
-"  -P pswd   use blowfish encryption, password is pswd",
+"  -e        use encryption, prompt for password",
+"  -P pswd   use encryption, password is pswd",
+#ifdef HAVE_BLOWFISH
+"  --blowfish use blowfish strong encryption",
+#endif
 "",
 "Splits (archives created as a set of split files):",
 "  -s ssize  create split archive with splits of size ssize, where ssize nm",
@@ -1187,7 +1194,11 @@ local void version_info()
 
   for (i = 0; i < sizeof(versinfolines)/sizeof(char *); i++)
   {
+#ifdef HAVE_BLOWFISH    
     printf(versinfolines[i], "Blowfish-Zip", VERSION, REVDATE);
+#else
+    printf(versinfolines[i], "Info-Zip", VERSION, REVDATE);
+#endif
     putchar('\n');
   }
 
@@ -1221,7 +1232,9 @@ local void version_info()
   i++;  /* zlib use means there IS at least one compilation option */
 #endif
 #if CRYPT
+#ifdef HAVE_BLOWFISH
   printf("\t[blowfish encryption of %s %s]\n", __DATE__, __TIME__);
+#endif
   printf("\t[encryption, version %d.%d%s of %s] (modified for Zip 3)\n\n",
             CR_MAJORVER, CR_MINORVER, CR_BETA_VER, CR_VERSION_DATE);
   for (i = 0; i < sizeof(cryptnote)/sizeof(char *); i++)
@@ -1943,6 +1956,7 @@ int set_filetype(out_path)
 #ifdef UNICODE_TEST
 #define o_sC            0x146
 #endif
+#define o_BF            0x147
 
 
 /* the below is mainly from the old main command line
@@ -1994,6 +2008,9 @@ struct option_struct far options[] = {
     {"D",  "no-dir-entries", o_NO_VALUE,    o_NOT_NEGATABLE, 'D',  "no entries for dirs themselves (-x */)"},
     {"DF", "difference-archive",o_NO_VALUE, o_NOT_NEGATABLE, o_DF, "create diff archive with changed/new files"},
     {"e",  "encrypt",     o_NO_VALUE,       o_NOT_NEGATABLE, 'e',  "encrypt entries, ask for password"},
+#ifdef HAVE_BLOWFISH
+    {"bf",  "blowfish",   o_NO_VALUE, o_NOT_NEGATABLE, o_BF,  "encrypt using blowfish"},
+#endif
 #ifdef OS2
     {"E",  "longnames",   o_NO_VALUE,       o_NOT_NEGATABLE, 'E',  "use OS2 longnames"},
 #endif
@@ -2797,6 +2814,16 @@ char **argv;            /* command line tokens */
             free(key);
           key_needed = 1;
 #endif /* !CRYPT */
+          break;
+        case o_BF: /* blowfish */
+          #ifndef HAVE_BLOWFISH
+          ZIPERR(ZE_PARMS, "blowfish encryption not supported");
+          #else /* HAVE_BLOWFISH */
+          use_blowfish = 1;
+          if (key)
+            free(key);
+          key_needed = 1;
+          #endif
           break;
         case 'F':   /* fix the zip file */
           fix = 1; break;

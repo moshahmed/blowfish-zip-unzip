@@ -2,10 +2,12 @@
 Blowfish encryption for zip and vim; in Blowfish output feedback mode.
 GPL(C) moshahmed/at/gmail
 Based on http://www.schneier.com/blowfish.html by Bruce Schneier
+$Header: c:/cvs/repo/src/zips/zip30/blowfish.h,v 1.19 2014-01-27 14:50:24 a Exp $ 
 */
 
 #ifndef BLOWFISH_VERSION
 #define BLOWFISH_VERSION   "3"
+#define HAVE_BLOWFISH     
 
 int           bf_self_test(void);
 void          bf_ofb_update(unsigned char c);
@@ -52,5 +54,8 @@ void krand_setup(int userseed);
 void hash_salt_pass(char *cryptkey, file_header *fh);
 void bf_e_cblock(uint8_t *block );
 void bf_d_cblock(uint8_t *block );
+
+extern int bf_verbose;
+extern int use_blowfish;
 
 #endif

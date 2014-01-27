@@ -5,6 +5,7 @@
   (the contents of which are also included in zip.h) for terms of use.
   If, for some reason, all these files are missing, the Info-ZIP license
   also may be found at:  ftp://ftp.info-zip.org/pub/infozip/license.html
+
 */
 /*
   crypt.c (full version) by Info-ZIP.      Last revised:  [see crypt.h]
@@ -216,7 +217,6 @@ void crypthead(passwd, crc)
     int c;                       /* random byte */
     uch header[RAND_HEAD_LEN];   /* random header */
     static unsigned calls = 0;   /* ensure different random header each time */
-    file_header fh, fh2;
 
     /* First generate RAND_HEAD_LEN-2 random bytes. We encrypt the
      * output of rand() to get less predictability, since rand() is
@@ -224,14 +224,19 @@ void crypthead(passwd, crc)
      */
     if (++calls == 1) {
         srand((unsigned)time(NULL) ^ ZCR_SEED2);
+#ifdef HAVE_KRAND
         krand_setup(ZCR_SEED2);
+#endif
+
     }
     init_keys(passwd);
 
     /* Create random header[12] */
     for (n = 0; n < RAND_HEAD_LEN-2; n++) {
         c = (rand() >> 7) & 0xff;
+#ifdef HAVE_KRAND
         c ^= knuth_rand() & 0xff;
+#endif
         header[n] = (uch)zencode(c, t);
     }
 
@@ -244,22 +249,28 @@ void crypthead(passwd, crc)
     header[RAND_HEAD_LEN-2] = (uch)zencode((int)(crc >> 16) & 0xff, t);
     header[RAND_HEAD_LEN-1] = (uch)zencode((int)(crc >> 24) & 0xff, t);
 
+#ifdef HAVE_BLOWFISH
     /* Use the encrypted random header[12] as salt and iv for bfzip */
-    memcpy(&fh, header, RAND_HEAD_LEN);
+    if (use_blowfish){
+      file_header fh, fh2;
+      memcpy(&fh, header, RAND_HEAD_LEN);
 
-    /* Encrypt the header[4..11] with bf9(salt,header[0..3],iv=0) */
-    /* Protect crc with bf(salt,password,iv=0) */
-    memset(&fh2, 0, sizeof(fh2));
-    memcpy(&fh2.salt, header, 4);
-    hash_salt_pass((char*)passwd, &fh2);
-    memset(&fh2, 0, sizeof(fh2)); // clear_key
-    bf_e_cblock(header+4);
- 
-    /* Hairy code, fh was saved earlier and used below, */
-    /* because blowfish algorithm maintains state in static data */
-    /* and so it cannot encrypt with multiple keys in parallel. */
-    hash_salt_pass((char*)passwd, &fh);
-    memset(&fh, 0, sizeof(fh)); // clear_key
+      /* Encrypt the header[4..11] with bf(salt,header[0..3],iv=0) */
+      /* Protect crc with bf(salt,password,iv=0) */
+      memset(&fh2, 0, sizeof(fh2));
+      memcpy(&fh2.salt, header, 4);
+      hash_salt_pass((char*)passwd, &fh2);
+      memset(&fh2, 0, sizeof(fh2)); /* clear_key */
+
+      bf_e_cblock(header+4);
+  
+      /* Hairy code, fh was saved earlier and used below, */
+      /* because blowfish algorithm maintains state in static data */
+      /* and so it cannot encrypt with multiple keys in parallel. */
+      hash_salt_pass((char*)passwd, &fh);
+      memset(&fh, 0, sizeof(fh)); /* clear_key */
+    }
+#endif
 
     bfwrite(header, 1, RAND_HEAD_LEN, BFWRITE_DATA);
 }
@@ -496,8 +507,13 @@ unsigned zfwrite(buf, item_size, nb)
 
         /* Encrypt data in buffer */
         for (size = item_size*(ulg)nb; size != 0; p++, size--) {
-            /* *p = (char)zencode(*p, t); */
-            *p = (char) BF_ZENCODE(*p, t);
+#ifdef HAVE_BLOWFISH
+        if (use_blowfish) {
+          *p = (char) BF_ZENCODE(*p, t);
+        } 
+        else 
+#endif
+          *p = (char)zencode(*p, t);
         }
     }
     /* Write the buffer out */

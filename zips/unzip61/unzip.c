@@ -67,6 +67,7 @@
 #define UNZIP_INTERNAL
 #include "unzip.h"      /* includes, typedefs, macros, prototypes, etc. */
 #include "crypt.h"
+#include "../zip30/blowfish.h"
 #include "unzvers.h"
 
 #ifndef WINDLL          /* The WINDLL port uses windll/windll.c instead... */
@@ -569,10 +570,15 @@ Send bug reports using //www.info-zip.org/zip-bug.html; see README for details.\
 # endif /* ?COPYRIGHT_CLEAN */
 #else /* !VMS */
 # ifdef COPYRIGHT_CLEAN
-   static ZCONST char Far UnzipUsageLine1[] = "\
-Blowfish-unzip derived from UnZip %d.%d%d%s of %s by Info-ZIP.  \n\
-Blowfish encryption and sha2 additions by moshahmed_at_gmail_com.\
-\n\n";
+   static ZCONST char Far UnzipUsageLine1[] =
+#ifdef HAVE_BLOWFISH
+"Blowfish-unzip derived from UnZip %d.%d%d%s of %s by Info-ZIP.  \n\
+Blowfish encryption and sha2 additions by moshahmed_at_gmail_com."
+#else
+"UnZip %d.%d%d%s of %s, by Info-ZIP.  Maintained by C. Spieler.  Send\n\
+bug reports using http://www.info-zip.org/zip-bug.html; see README for details."
+#endif
+"\n\n";
 # else
    static ZCONST char Far UnzipUsageLine1[] = "\
 UnZip %d.%d%d%s of %s, by Info-ZIP.  UnReduce (c) 1989 by S. H. Smith.\n\
@@ -638,8 +644,11 @@ static ZCONST char Far UnzipUsageLine3[] = "\n\
   -x  exclude files that follow (in xlist)   -d  extract files onto disk fm\n";
 #else /* !VM_CMS */
 static ZCONST char Far UnzipUsageLine3[] = "\n\
-  -p  extract files to pipe, no messages     -l  list files (short format)\n\
-  -P  blowfish decryption password\n\
+  -p  extract files to pipe, no messages     -l  list files (short format)\n"
+#ifdef HAVE_BLOWFISH
+"  --blowfish use blowfish decryption         --blowfish=0 to disable it.\n"
+#endif
+"  -P  decryption password\n\
   -f  freshen existing files, create none    -t  test compressed archive data\n\
   -u  update files, create if necessary      -z  display archive comment only\n\
   -v  list verbosely/show version info     %s\n\
@@ -1339,6 +1348,20 @@ int uz_opts(__G__ pargc, pargv)
 
     while (++argv, (--argc > 0 && *argv != NULL && **argv == '-')) {
         s = *argv + 1;
+
+        /* Process multi character long options */
+#ifdef HAVE_BLOWFISH
+        if ( !strcmp(*argv,"--blowfish")){
+          use_blowfish = 1;
+          continue;
+        }
+        if (!strcmp(*argv,"--blowfish=0")) {
+          use_blowfish = 0;
+          continue;
+        }
+        /* else, process single character options */
+#endif
+
         while ((c = *s++) != 0) {    /* "!= 0":  prevent Turbo C warning */
 #ifdef CMS_MVS
             switch (tolower(c))
