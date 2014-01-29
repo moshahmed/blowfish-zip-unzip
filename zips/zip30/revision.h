@@ -21,8 +21,14 @@
 #define Z_PATCHLEVEL 0
 #define Z_BETALEVEL "i BETA"
 
+#include "blowfish.h"
+#ifdef HAVEBLOWFISH
 #define VERSION "blowfish 3.0 by moshahmed@gmail" 
 #define REVDATE __DATE__ " " __TIME__
+#else
+#define VERSION "3.0"
+#define REVDATE "July 5th 2008"
+#endif
 
 #define DW_MAJORVER    Z_MAJORVER
 #define DW_MINORVER    Z_MINORVER
@@ -57,15 +63,27 @@ ZCONST char *copyright[] = {
 #endif
 };
 
+#ifdef HAVEBLOWFISH
 ZCONST char * far versinfolines[] = {
 "This is blowfish-zip derived from %s %s (%s) of Info-ZIP. ",
 "It adds sha2 hashing and blowfish encryption. ",
 "The original UnZip sources are available from Info-ZIP's home site at ",
 "http://www.info-zip.org/pub/infozip/UnZip.html; ",
-"Send all feedback on blowfish-zip to moshahmed-at-gmail-com",
+"Send all feedback on blowfish-zip to moshahmed_at_gmail_com",
 "",
 ""
 };
+#else
+ZCONST char * far versinfolines[] = {
+"This is %s %s (%s), by Info-ZIP.",
+"Currently maintained by E. Gordon.  Please send bug reports to",
+"the authors using the web page at www.info-zip.org; see README for details.",
+"",
+"Latest sources and executables are at ftp://ftp.info-zip.org/pub/infozip,",
+"as of above date; see http://www.info-zip.org/ for other sites.",
+""
+};
+#endif
 
 /* new notice - 4 March 2007 */
 ZCONST char * far cryptnote[] = {

@@ -34,7 +34,7 @@
 #  ifdef BZIP2_USEBZIP2DIR
 #    include "bzip2/bzlib.h"
 #  else
-#    include "../bzip2/bzlib.h"
+#    include "bzlib.h"
 #  endif
 #endif
 

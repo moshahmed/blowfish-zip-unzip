@@ -65,7 +65,7 @@
      this is done by the configure script. */
   /* Also do not need path for bzip2 include if OS includes support
      for bzip2 library. */
-# include "../bzip2/bzlib.h"
+# include "bzlib.h"
 #endif
 
 #define MAXCOM 256      /* Maximum one-line comment size */
@@ -662,10 +662,11 @@ local void help()
 #  if CRYPT
 "  -e   encrypt                      -n   don't compress these suffixes"
 #     ifdef HAVE_BLOWFISH
-,"  --blowfish  encrypt with blowfish, use with -e and -P password  "
+,
+"  --blowfish  encrypt with blowfish, use with -e and -P password  "
 #     endif 
 #  else
-,"  -h   show this help               -n   don't compress these suffixes"
+"  -h   show this help               -n   don't compress these suffixes"
 #  endif
 #endif /* ?AMIGA */
 #ifdef RISCOS
@@ -850,10 +851,10 @@ local void help_extended()
 "              bzip2 - use bzip2 compression (need modern unzip)",
 "",
 "Encryption:",
-"  -e        use encryption, prompt for password",
-"  -P pswd   use encryption, password is pswd",
+"  -e        use standard (weak) PKZip 2.0 encryption, prompt for password",
+"  -P pswd   use standard encryption, password is pswd",
 #ifdef HAVE_BLOWFISH
-"  --blowfish use blowfish strong encryption",
+"  --blowfish use blowfish strong encryption, when used with -e -P pswd options.",
 #endif
 "",
 "Splits (archives created as a set of split files):",
@@ -1197,7 +1198,7 @@ local void version_info()
 #ifdef HAVE_BLOWFISH    
     printf(versinfolines[i], "Blowfish-Zip", VERSION, REVDATE);
 #else
-    printf(versinfolines[i], "Info-Zip", VERSION, REVDATE);
+    printf(versinfolines[i], "Zip", VERSION, REVDATE);
 #endif
     putchar('\n');
   }

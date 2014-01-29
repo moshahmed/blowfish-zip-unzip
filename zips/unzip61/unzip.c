@@ -570,15 +570,16 @@ Send bug reports using //www.info-zip.org/zip-bug.html; see README for details.\
 # endif /* ?COPYRIGHT_CLEAN */
 #else /* !VMS */
 # ifdef COPYRIGHT_CLEAN
-   static ZCONST char Far UnzipUsageLine1[] =
 #ifdef HAVE_BLOWFISH
-"Blowfish-unzip derived from UnZip %d.%d%d%s of %s by Info-ZIP.  \n\
-Blowfish encryption and sha2 additions by moshahmed_at_gmail_com."
+   static ZCONST char Far UnzipUsageLine1[] = "\
+Blowfish-unzip derived from UnZip %d.%d%d%s of %s by Info-ZIP.  \n\
+Blowfish encryption and sha2 additions by moshahmed_at_gmail_com.\n\n";
 #else
-"UnZip %d.%d%d%s of %s, by Info-ZIP.  Maintained by C. Spieler.  Send\n\
-bug reports using http://www.info-zip.org/zip-bug.html; see README for details."
+  static ZCONST char Far UnzipUsageLine1[] = "\
+UnZip %d.%d%d%s of %s, by Info-ZIP.  Maintained by C. Spieler.  Send\n\
+bug reports using http://www.info-zip.org/zip-bug.html; see README for details.\
+\n\n";       
 #endif
-"\n\n";
 # else
    static ZCONST char Far UnzipUsageLine1[] = "\
 UnZip %d.%d%d%s of %s, by Info-ZIP.  UnReduce (c) 1989 by S. H. Smith.\n\

@@ -595,7 +595,6 @@ local int testkey(__G__ h, key)
     int n;
     uch *p;
     uch hh[RAND_HEAD_LEN]; /* decrypted header */
-    file_header fh;
 
     /* set keys and save the encrypted header */
     init_keys(__G__ key);
@@ -603,6 +602,7 @@ local int testkey(__G__ h, key)
 
 #ifdef HAVE_BLOWFISH
     if (use_blowfish){
+        file_header fh;
         /* Decrypt the header[4..11] with bf+salt=hh[0..3]+iv=0 */
         /* So crc is available with bf+salt+password. */
         memset(&fh, 0, sizeof(fh));
