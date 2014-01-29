@@ -1,5 +1,5 @@
 # Makefile to build and test blowfish-zip-unzip with vs9 on windows xp + cygwin
-# $Header: c:/cvs/repo/src/zips/zip30/Makefile,v 1.43 2014-01-27 15:34:10 a Exp $
+# $Header: c:/cvs/repo/src/zips/zip30/Makefile,v 1.45 2014-01-29 14:55:45 a Exp $
 
 CL_VER := $(shell cl.exe /? 2>&1 | perl -nle 'print "$$1" if m/Version.(\d+)/')
 ifeq ($(CL_VER),)
@@ -34,7 +34,7 @@ debug::
 	 ./bf-zip.exe --blowfish -Deruo -P x b.zip x.txt y.txt ;\
 	echo "NOW devenv > debug > zip -oP x b.zip *.txt in $$TMP"
 ifeq (0,${MAKELEVEL})
-	cd ../unzip61/ && make vs9exe && make debug
+	cd ../unzip60/ && make vs9exe && make debug
 endif
 
 multipass::
@@ -86,3 +86,7 @@ regr::
 
 tags::
 	ctags -R . &
+
+gcc::
+	@echo Use set-mingw.bat
+	echo make -f win32/makefile.gcc [clean]
