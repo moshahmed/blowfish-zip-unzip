@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zip", "zip.vcproj", "{5CF125A0-2571-42AD-B2FA-DDF2FF7A9DE0}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unzip", "..\..\..\unzip61\win32\vs9\unzip.vcproj", "{C107FFD3-2DB0-4321-8FC7-EB1656A0D063}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unzip", "..\..\..\unzip60\win32\vs9\unzip.vcproj", "{C107FFD3-2DB0-4321-8FC7-EB1656A0D063}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

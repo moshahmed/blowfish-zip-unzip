@@ -1353,7 +1353,7 @@ int uz_opts(__G__ pargc, pargv)
         /* Process multi character long options */
 #ifdef HAVE_BLOWFISH
         if ( !strcmp(*argv,"--blowfish")){
-          use_blowfish = 1;
+          use_blowfish++;
           continue;
         }
         if (!strcmp(*argv,"--blowfish=0")) {

@@ -607,14 +607,12 @@ local int testkey(__G__ h, key)
         /* So crc is available with bf+salt+password. */
         memset(&fh, 0, sizeof(fh));
         memcpy(&fh.salt, hh, 4);
-        hash_salt_pass((char*)key, &fh);
-        memset(&fh, 0, sizeof(fh)); /* clear_key_mem */
+        hash_salt_pass((char*)key, &fh, sizeof(fh));
         bf_d_cblock(hh+4);
      
         /* Use the encrypted random header[12] as salt and iv for bfunzip */
         memcpy(&fh, hh, RAND_HEAD_LEN);
-        hash_salt_pass((char*)key, &fh);
-        memset(&fh, 0, sizeof(fh)); /* clear_key_mem */
+        hash_salt_pass((char*)key, &fh, sizeof(fh));
     }
 #endif
 

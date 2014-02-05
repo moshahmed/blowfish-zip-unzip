@@ -259,16 +259,13 @@ void crypthead(passwd, crc)
       /* Protect crc with bf(salt,password,iv=0) */
       memset(&fh2, 0, sizeof(fh2));
       memcpy(&fh2.salt, header, 4);
-      hash_salt_pass((char*)passwd, &fh2);
-      memset(&fh2, 0, sizeof(fh2)); /* clear_key */
-
+      hash_salt_pass((char*)passwd, &fh2, sizeof(fh2));
       bf_e_cblock(header+4);
   
       /* Hairy code, fh was saved earlier and used below, */
       /* because blowfish algorithm maintains state in static data */
       /* and so it cannot encrypt with multiple keys in parallel. */
-      hash_salt_pass((char*)passwd, &fh);
-      memset(&fh, 0, sizeof(fh)); /* clear_key */
+      hash_salt_pass((char*)passwd, &fh, sizeof(fh));
     }
 #endif
 

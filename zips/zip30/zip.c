@@ -2820,7 +2820,7 @@ char **argv;            /* command line tokens */
           #ifndef HAVE_BLOWFISH
           ZIPERR(ZE_PARMS, "blowfish encryption not supported");
           #else /* HAVE_BLOWFISH */
-          use_blowfish = 1;
+          use_blowfish++;
           if (key)
             free(key);
           key_needed = 1;

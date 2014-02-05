@@ -1,5 +1,5 @@
 /*
-$Header: c:/cvs/repo/src/zips/zip30/sha256.h,v 1.6 2014-01-26 03:03:41 a Exp $
+$Header: c:/cvs/repo/github/bfz/zips/zip30/sha256.h,v 1.1 2014-02-04 11:24:58 a Exp $
 FIPS-180-2 compliant SHA-256 implementation
 GPL by Christophe Devine.
 Modified for md5deep, in public domain.

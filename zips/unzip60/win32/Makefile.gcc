@@ -575,7 +575,7 @@ windllb$(OBJ): windll/windll.c $(UNZIP_H) $(WINDLL_H) crypt.h unzvers.h consts.h
 	$(CC) $(CFLAGS) $(CVER) $(GENLIBFL) -I. $<
 
 clean:
-	-$(subst /,\,$(MAKE)) -C $(IZ_BZIP2) -f Makebz2.iz RM="$(RM)" clean
+	#-$(subst /,\,$(MAKE)) -C $(IZ_BZIP2) -f Makebz2.iz RM="$(RM)" clean
 	-$(RM) *$(OBJ)
 	-$(RM) unzip$(EXE) funzip$(EXE) unzipsfx$(EXE)
 	-$(RM) unzip32.dll uzexampl$(EXE) SFXWiz32$(EXE)

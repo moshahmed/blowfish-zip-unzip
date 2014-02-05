@@ -2,7 +2,7 @@
 Blowfish encryption for vim; in Blowfish output feedback mode.
 Modified for vim and zip, GPL(C) moshahmed/at/gmail
 Based on http://www.schneier.com/blowfish.html by Bruce Schneier.
-$Header: c:/cvs/repo/src/zips/zip30/blowfish.c,v 1.15 2014-01-27 14:50:23 a Exp $
+$Header: c:/cvs/repo/github/bfz/zips/zip30/blowfish.c,v 1.1 2014-02-04 11:24:57 a Exp $
 */
 
 #include <stdio.h>
@@ -543,7 +543,7 @@ int bf_verbose=0;
 local_function
 void print_block8(char *message, block8 block) {
   int k;
-  if (bf_verbose>2) {
+  if (bf_verbose>2 || use_blowfish>2) {
       printfd(("block: %10s:", message));
       for(k=0; k<8; k++) {
           printfd(("%02x ", block.uc[k]));
@@ -554,7 +554,7 @@ void print_block8(char *message, block8 block) {
   }
 }
 
-void hash_salt_pass(char *cryptkey, file_header *fh) {
+void hash_salt_pass(char *cryptkey, file_header *fh, int sizeof_fh) {
   const int sha_key_strenghtening_rounds = 1<<16;
   int i;
   int key_strlen = (int) strlen(cryptkey);
@@ -569,10 +569,12 @@ void hash_salt_pass(char *cryptkey, file_header *fh) {
   bf_key_init(hash, fh->salt.uc, sizeof(fh->salt.uc));
   bf_ofb_init((unsigned char*)&fh->iv, sizeof(fh->iv));
 
-  if (bf_verbose>0) {
+  if (bf_verbose>0 || use_blowfish > 1) {
     printfd(("\n" "blowfish: salt:%08lx ", fh->salt.ul));
     printfd(("iv:%08lx  %08lx\n", fh->iv.ul[0], fh->iv.ul[1]));
     printfd(("hash of salt and password:%s\n", hash));
   }
-  memset(hash,0,sizeof(hash)); // clear_key
+  /* clear_key */
+  memset(hash,0,sizeof(hash));
+  memset(fh, 0, sizeof_fh);
 }

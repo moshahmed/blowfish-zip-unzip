@@ -1,31 +1,31 @@
-clean::
-	cd unzip60     && make clean && make tags
-	cd zip30       && make clean && make tags
-	cd minizip-aes && make clean && make tags
+# $Header: c:/cvs/repo/github/bfz/zips/Makefile,v 1.5 2014-02-04 11:55:03 a Exp $
+GCC_VER := $(shell gcc -v 2>&1 | perl -nle 'print "$$1" if m/Target:.(\S+)/')
+ifneq ($(GCC_VER),mingw32)
+  $(error run set-mingw.bat to setup codeblock mingw compiler)
+endif
+
+vs9bin=$(abspath bin/$(dir $(lastword $(MAKEFILE_LIST)))/vs9)
+gccbin=$(abspath bin/$(dir $(lastword $(MAKEFILE_LIST)))/gcc)
+cb12bin=$(abspath bin/$(dir $(lastword $(MAKEFILE_LIST)))/cb12)
+CTMP=$(shell cygpath -wam $$TMP)
+bb=--blowfish --blowfish
 
 gcc::
-	@echo Use set-mingw.bat
 	mkdir -p bin/gcc
 	cd zip30   && make -f win32/makefile.gcc
 	cd unzip60 && make -f win32/makefile.gcc
+	echo cp -vp zip30/*.exe $(gccbin)/
 	cp -vp zip30/*.exe bin/gcc/
 	cp -vp unzip60/*.exe bin/gcc/
 	bin/gcc/zip -v | grep -i blowfish
 	bin/gcc/unzip -v | grep -i blowfish
-	make gcc-test
-	make gcc-clean
+	make test
 
 gcc-clean::
 	@echo == cleaning gcc files
 	cd zip30       && make -f win32/makefile.gcc clean
 	cd unzip60     && make -f win32/makefile.gcc clean
 
-gcc-test::
-	bin/gcc/zip   --blowfish -Duro -P pass x.zip bin/gcc/*.exe
-	        zip              -Duro -P pass x.zip Makefile
-	@echo ========== Plain unzip will say 'incorrect password' for exe
-	bin/gcc/unzip            -vt   -P pass x.zip || true
-	@echo ========== blowfish unzip will say OK for exe
-	bin/gcc/unzip            -vt   -P pass x.zip || true
-	bin/gcc/unzip --blowfish -vt   -P pass x.zip || true
-
+tags::
+	cd zip30   && ctags -R . &
+	cd unzip60 && ctags -R . &
