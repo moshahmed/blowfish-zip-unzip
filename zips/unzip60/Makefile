@@ -1,5 +1,5 @@
 # Makefile to build and test blowfish-zip-unzip with vs9 on windows xp + cygwin
-# $Header: c:/cvs/repo/github/bfz/zips/unzip60/Makefile,v 1.1 2014-02-04 11:24:52 a Exp $
+# $Header: c:/cvs/repo/github/bfz/zips/unzip60/Makefile,v 1.2 2014-02-05 16:16:23 a Exp $
 
 # Check for msvc9 compiler.
 CL_VER := $(shell cl.exe /? 2>&1 | perl -nle 'print "$$1" if m/Version.(\d+)/')
