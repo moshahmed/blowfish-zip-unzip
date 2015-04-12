@@ -1,11 +1,11 @@
 blowfish-zip-unzip
 ==================
 
-zip and unzip with blowfish encryption
+zip and unzip with blowfish encryption.
 
-Compiles with visual studio 2008.
-
-Tested binaries on win32x86
+Compiles with visual studio 2008, VC6, GCC mingw 4.8.1.
+Tested binaries on win32x86, and zip files are compatible
+between different compilers.
 
 New option --blowfish to enable stronger encryption method.
 Output zip files can contain mix of old and new encrypted files,
