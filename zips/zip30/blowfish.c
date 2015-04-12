@@ -2,7 +2,7 @@
 Blowfish encryption for vim; in Blowfish output feedback mode.
 Modified for vim and zip, GPL(C) moshahmed/at/gmail
 Based on http://www.schneier.com/blowfish.html by Bruce Schneier.
-$Header: c:/cvs/repo/github/bfz/zips/zip30/blowfish.c,v 1.1 2014-02-04 11:24:57 a Exp $
+$Header: c:/cvs/repo/github/bfz/zips/zip30/blowfish.c,v 1.2 2015-04-12 04:06:42 a Exp $
 */
 
 #include <stdio.h>
@@ -370,7 +370,7 @@ void bf_key_init(uint8_t *password, uint8_t *salt, int salt_len) {
     int keylen;
     char hexit[65];
     char key[32];
-    const int bf_key_strenghtening_rounds = 1 << 10;
+    const int bf_key_strenghtening_rounds = 1000; // 1 << 10;
 
     sha256_key((char*) password, (char*)salt, salt_len, hexit, sizeof(hexit));
     for (i=0; i<bf_key_strenghtening_rounds; i++) {
@@ -380,7 +380,7 @@ void bf_key_init(uint8_t *password, uint8_t *salt, int salt_len) {
     /* convert the key from 64 hex chars to 32 binary chars. */
     keylen = (int) strlen((char*) hexit)/2;
     for (i=0; i<keylen; i++) {
-        sscanf(&key[i*2], "%2x", &j);
+        sscanf(&hexit[i*2], "%2x", &j);
         key[i] = (uint8_t) (j & 0xff);
     }
     memset(hexit, 0, sizeof(hexit)); // clear_key
@@ -436,7 +436,7 @@ int bf_check_tables(uint32_t ipa[18],
     }
     #ifdef _DEBUG
     if (c != val) {
-      printf("found=0x%08xU != 0x%08xU expected\n",c,val);
+      printf("bf_check_tables: found=0x%08xU != 0x%08xU expected\n",c,val);
     }
     #endif
     return c == val ;
@@ -453,18 +453,22 @@ Assert csum(pax sbx(password)) is keysum.
 */
 static struct_bf_test_data bf_test_data[] = {
   {
-      "p\x01\x02\x03\x04\x005\x006",
-      "s\x01\x02\x03\x04\x005\x006",
-      "t\x01\x02\x03\x04\x005\x006",
-      "\xcf\xe6\xd2\xa5\x1e\xe9\xaa\xe8", /* cryptxt */
+      "password",
+      "salt",
+      "plaintxt",
+      "\xad\x3d\xfa\x7f\xe8\xea\x40\xf6", /* cryptxt */
       "\x72\x50\x3b\x38\x10\x60\x22\xa7", /* badcryptxt */
-      0xdfdf7fbeU, /* keysum */
+      0x56701b5du /* keysum */
   },
-};
+};        
 
 int bf_self_test(void) {
+    static int bf_tested=0;
     int i, bn, err=0;
     block8 bk;
+    if (bf_tested++) {
+      return 0;
+    }
     if (!bf_check_tables(ipa, sbi, 0x6ffa520a)) {
         err++;
     }
@@ -482,7 +486,7 @@ int bf_self_test(void) {
         bf_e_cblock(bk.uc);
         if (memcmp(bk.uc, bf_test_data[i].cryptxt, 8) != 0) {
             int j;
-            printf("error: expected=");
+            printf("bf_self_test: error: expected=");
             for (j=0; j<8;j++) printf("\\x%02x", bk.uc[j]);
             printf("\n");
             err++;
@@ -559,6 +563,8 @@ void hash_salt_pass(char *cryptkey, file_header *fh, int sizeof_fh) {
   int i;
   int key_strlen = (int) strlen(cryptkey);
   char hash[65];
+
+  bf_self_test();
 
   sha256_begin();
   for(i=0; i<sha_key_strenghtening_rounds;i++) {
