@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 # What: zip using public key for win7
-# $Header: c:/cvs/repo/mosh/perl/zip-ssl.sh,v 1.17 2017-10-12 15:50:18 a Exp $ 
+# $Header: c:/cvs/repo/mosh/perl/zip-ssl.sh,v 1.18 2017-10-12 16:17:15 a Exp $ 
 # GPL(C) moshahmed/at/gmail 
 
 function die() { 1>&2 echo "$*" ; exit ;}
@@ -10,9 +10,7 @@ function need_file(){ test -f "$1" || die "need_file $1" ;}
 function need_dir(){ test -d "$1" || die "need_dir $1" ;} 
  
 CMD=${0##*\\} 
-zipper=c:/bin14/zip
 zipper=zip
-unzipper=c:/bin14/unzip
 unzipper=unzip
 
 export TMPDIR="$(mktemp -d)"

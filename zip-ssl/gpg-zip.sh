@@ -1,11 +1,10 @@
 #!/usr/bin/bash
+# GPL(C) moshahmed@gmail.com 2016-01-29
 # from https://github.com/github-archive/windows-msysgit/blob/master/bin/gpg-zip
-# $Id: gpg-zip.sh,v 1.25 2017-10-12 14:05:00 a Exp $
-# 2016-01-29
+# $Id: gpg-zip.sh,v 1.30 2017-10-12 16:55:42 a Exp $
 
 # gpg-archive - gpg-ized tar using the same format as PGP's PGP Zip.
-# (C) 2005 FSF
-# This file is part of GnuPG.
+# (C) 2005 FSF This file is part of GnuPG.
 # Despite the name, PGP Zip format is actually an OpenPGP-wrapped tar file.
 # To be compatible with PGP, this must be a USTAR format tar file.
 # Unclear on whether there is a distinction here between
@@ -18,7 +17,7 @@ function need_file(){ test -f "$1" || die "need_file $1" ;}
 function need_dir(){ test -d "$1" || die "need_dir $1" ;}
 
 function make_gpg_key() {
-  GPASS=x
+  warn "== make_gpg_key GPASS=$GPASS GNUPGHOME=$GNUPHOME"
   cat > foo <<EOF_FOO
       %echo Generating a basic OpenPGP key
       Key-Type: DSA
@@ -33,11 +32,16 @@ function make_gpg_key() {
       %commit
       %echo done
 EOF_FOO
+  gpg --batch --gen-key foo
 }
 
 CMD=${0##*\\}
 
 TAR=tar
+
+# GPG=c:/tools/gpg215/bin/gpg.exe .. this doesn't work with mosh.hmi
+# GPG=c:/tools/gpg4win/gpg2.exe
+# GPG=c:/bin14/gpg14/gpg.exe
 GPG=gpg
 
 GPG_VERSION=$( $GPG --version | grep "^gpg" )
@@ -46,7 +50,7 @@ gpg_args=-q
 tar_args=
 
 usage="\
-cvs id $Id: gpg-zip.sh,v 1.25 2017-10-12 14:05:00 a Exp $
+cvs id $Id: gpg-zip.sh,v 1.30 2017-10-12 16:55:42 a Exp $
 Usage: $CMD OPTIONS INFILES INDIRS .. Encrypt/decrypt/sign files into archive
 Options:
   [-h|--help]
@@ -57,9 +61,9 @@ Options:
   [-0] no default options
   [--gpg GPG_EXE] [--gpg-args ARGS] gpg_args+=ARGS
   [--tar TAR_EXE] [--tar-args ARGS] tar_args+=ARGS
-  [--selftest]
   [-v=1] verbose
   [-p=password]
+  [-selftest]
 
   GPG=$GPG, TAR=$TAR,
   GPG_VERSION=$GPG_VERSION
@@ -86,37 +90,27 @@ while test $# -gt 0 ; do
   case $1 in
     -h | -\? | --help | --h*) die "$usage" ;;
     --list-archive|-ls)
-      list=yes
-      create=no
-      unpack=no
+      action=list
       shift
       ;;
     --encrypt | -e)
       gpg_args="$gpg_args --encrypt"
-      list=no
-      create=yes
-      unpack=no
+      action=create
       shift
       ;;
     --decrypt | -d)
       gpg_args="$gpg_args --decrypt"
-      list=no
-      create=no
-      unpack=yes
+      action=unpack
       shift
       ;;
     --symmetric | -c)
       gpg_args="$gpg_args --symmetric"
-      list=no
-      create=yes
-      unpack=no
+      action=create
       shift
       ;;
     --sign | -s)
       gpg_args="$gpg_args --sign"
-      list=no
-      create=yes
-      unpack=no
+      action=create
       shift
       ;;
     --recipient | -r)
@@ -163,7 +157,7 @@ while test $# -gt 0 ; do
       tar_args="$tar_args $2"
       shift 2
       ;;
-    --selftest) selftest=yes ; shift ;;
+    -selftest) action=selftest ; shift ;;
     -p=*) GPASS=${1#-p=} ; shift;
       if [[ -z "$GPASS" ]] ;then
         read -s -p "password=" GPASS
@@ -177,46 +171,33 @@ while test $# -gt 0 ; do
   esac
 done
 
-if test x$create = xyes ; then # Pack
+case $action in
+create)
   warn "== Packing $@ =="
   info "$TAR -cf - "$@" | $GPG --set-filename x.tar $gpg_args" 1>&2
         $TAR -cf - "$@" | $GPG --set-filename x.tar $gpg_args
-
-elif test x$unpack = xyes ; then # Unpack
+;;
+unpack)
   warn "== Unpacking $@ =="
   info "$GPG $gpg_args $1 | $TAR $tar_args -xvf -" 1>&2
         $GPG $gpg_args $1 | $TAR $tar_args -xvf -
-
-elif test x$list = xyes ; then # List
+;;
+list)
   warn "== Listing $@ =="
   info "$GPG $gpg_args $1 | $TAR $tar_args -tf -" 1>&2
         $GPG $gpg_args $1 | $TAR $tar_args -tf -
-
-elif test x$selftest = xyes ; then # selftest
+;;
+selftest)
   export GNUPGHOME="$(mktemp -d)"
-  GPASS=x
   cd $GNUPGHOME
-  cat >foo <<EOF
-      %echo Generating a basic OpenPGP key
-      Key-Type: DSA
-      Key-Length: 1024
-      Subkey-Type: ELG-E
-      Subkey-Length: 1024
-      Name-Real: MoshHmi
-      Name-Comment: test
-      Name-Email: mosh+@hmi-tech.net
-      Expire-Date: 0
-      Passphrase: $GPASS
-      %commit
-      %echo done
-EOF
-  gpg --batch --gen-key foo
+  GPASS=x
+  make_gpg_key
   warn "== selftest $@ =="
   OUT=out.gtz
   rm -f $OUT
   date > date.1
   date > date.2
-	bash $0 -v=$verbose -0 -e -r MoshHmi -o $OUT date.1 date.2
+	bash $0 -v=$verbose -0 -e -r Mosh.Hmi -o $OUT date.1 date.2
   need_file $OUT
   mv date.1 date.1.old
   mv date.2 date.2.old
@@ -228,6 +209,8 @@ EOF
   else
     warn "test failed"
   fi 
-else
+  ;;
+*)
   die "$usage"
-fi
+  ;;
+esac

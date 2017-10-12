@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 # What: 7z using public key for win7
-# $Header: c:/cvs/repo/mosh/perl/7z-ssl.sh,v 1.37 2017-10-12 15:39:21 a Exp $ 
+# $Header: c:/cvs/repo/mosh/perl/7z-ssl.sh,v 1.38 2017-10-12 16:17:15 a Exp $ 
 # GPL(C) moshahmed/at/gmail 
 
 function die() { 1>&2 echo "$*" ; exit ;}
@@ -11,6 +11,7 @@ function need_dir(){ test -d "$1" || die "need_dir $1" ;}
  
 CMD=${0##*\\} 
 zipper=7z
+
 export TMPDIR="$(mktemp -d)"
 log=$TMPDIR/run.log
 keyfile=$TMPDIR/id_rsa.tmp
@@ -19,7 +20,6 @@ archive=$TMPDIR/test.7z
 verbose=
 action=
 args=
-
 
 function usage() { 1>&2 echo "
 What: $CMD  [-k keyfile] -[K|t|a|x] .. 7z encrypt with openssl id_rsa
