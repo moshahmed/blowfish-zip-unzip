@@ -1,13 +1,14 @@
 #!/usr/bin/bash
 # What: gpg-glob.sh for windows
+# GPL(C) moshahmed/at/gmail
 
 function die() { 1>&2 echo "$*" ; exit ;}
 function warn() { 1>&2 echo "$*" ;}
 function info() { if [[ -n "$VERBOSE" ]]; then 1>&2 echo $* ;fi ;}
-function need_file(){ test -f "$1" || die "need_file $1" ;} 
-function need_dir(){ test -d "$1" || die "need_dir $1" ;} 
- 
-CMD=${0##*\\} 
+function need_file(){ test -f "$1" || die "need_file $1" ;}
+function need_dir(){ test -d "$1" || die "need_dir $1" ;}
+
+CMD=${0##*\\}
 ACTION=c
 USERID=x
 GPG=gpg
@@ -80,7 +81,7 @@ for i in $* ;do # PROCESS OPTIONS
   *) break ;;
   esac
 done
- 
+
 if [[ $# == 0 ]] ;then
   print_usage No files to process?
 fi
@@ -99,7 +100,7 @@ for INFILE in $* ;do
     print_usage "use tar -cvf $INFILE | gpg -c -o $OUTFILE"
   fi
   if [[ -e $OUTFILE && $OVERWRITE -eq 0 ]] ;then
-    print_usage "Use -w to overwrite $OUTFILE" 
+    print_usage "Use -w to overwrite $OUTFILE"
   fi
   if [[ "$INFILE" == "$OUTFILE" ]] ;then
     print_usage "Same OUTFILE==INFILE=$INFILE"
@@ -111,7 +112,7 @@ for INFILE in $* ;do
     ;;
   d) echo "$GPASS" |
     $GPG --passphrase-fd 0 --batch --yes -d -q --output "$OUTFILE" "$INFILE"
-    ;; 
+    ;;
   *) print_usage "ACTION $ACTION not supported" ;;
   esac
 done

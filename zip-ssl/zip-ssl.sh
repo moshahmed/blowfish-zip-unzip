@@ -1,15 +1,15 @@
 #!/usr/bin/bash
 # What: zip using public key for win7
-# $Header: c:/cvs/repo/mosh/perl/zip-ssl.sh,v 1.18 2017-10-12 16:17:15 a Exp $ 
-# GPL(C) moshahmed/at/gmail 
+# $Header: c:/cvs/repo/mosh/perl/zip-ssl.sh,v 1.18 2017-10-12 16:17:15 a Exp $
+# GPL(C) moshahmed/at/gmail
 
 function die() { 1>&2 echo "$*" ; exit ;}
 function warn() { 1>&2 echo $* ;}
 function info() { if [[ -n "$verbose" ]]; then 1>&2 echo $* ;fi ;}
-function need_file(){ test -f "$1" || die "need_file $1" ;} 
-function need_dir(){ test -d "$1" || die "need_dir $1" ;} 
- 
-CMD=${0##*\\} 
+function need_file(){ test -f "$1" || die "need_file $1" ;}
+function need_dir(){ test -d "$1" || die "need_dir $1" ;}
+
+CMD=${0##*\\}
 zipper=zip
 unzipper=unzip
 
@@ -51,13 +51,13 @@ Options: $CMD
   echo $*
   exit
 }
- 
+
 # Options
-while [ $# -gt 0 ]  ;do 
-	case $1 in 
+while [ $# -gt 0 ]  ;do
+	case $1 in
     -lcd) dir=${2:Need-lcd-dir} ; shift; need_dir $dir ; cd $dir ;;
 		-k)	keyfile=${2:?Need-keyfile}; shift ;;
-    -K) keyfile=${2:?}; shift; 
+    -K) keyfile=${2:?}; shift;
         warn "Creating keypair keyfile=$keyfile with openssl"
         # ssh-keygen -t rsa -f $keyfile -q -N "" # blank pass phrase.
         ssh-keygen -t rsa -f $keyfile -q
@@ -103,11 +103,11 @@ function testme() {
     warn "test failed"
   fi
 }
- 
+
 case $action in
   -t) testme ; exit ;;
   -o) warn otp=$(cat $otpfile | openssl pkeyutl -decrypt -inkey $keyfile) ; exit ;;
-	-a) 
+	-a)
     # generate otp (one time password)
     otp=$(openssl rand -hex 32|dos2unix)
     # Save encrypted otp = ssl_enc(keyfile,otp) in the archive, -si from stdin.

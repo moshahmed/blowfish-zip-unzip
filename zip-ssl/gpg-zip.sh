@@ -208,7 +208,7 @@ selftest)
     warn "test passed"
   else
     warn "test failed"
-  fi 
+  fi
   ;;
 *)
   die "$usage"

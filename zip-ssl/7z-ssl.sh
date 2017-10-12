@@ -1,15 +1,15 @@
 #!/usr/bin/bash
 # What: 7z using public key for win7
-# $Header: c:/cvs/repo/mosh/perl/7z-ssl.sh,v 1.38 2017-10-12 16:17:15 a Exp $ 
-# GPL(C) moshahmed/at/gmail 
+# $Header: c:/cvs/repo/mosh/perl/7z-ssl.sh,v 1.38 2017-10-12 16:17:15 a Exp $
+# GPL(C) moshahmed/at/gmail
 
 function die() { 1>&2 echo "$*" ; exit ;}
 function warn() { 1>&2 echo $* ;}
 function info() { if [[ -n "$verbose" ]]; then 1>&2 echo $* ;fi ;}
-function need_file(){ test -f "$1" || die "need_file $1" ;} 
-function need_dir(){ test -d "$1" || die "need_dir $1" ;} 
- 
-CMD=${0##*\\} 
+function need_file(){ test -f "$1" || die "need_file $1" ;}
+function need_dir(){ test -d "$1" || die "need_dir $1" ;}
+
+CMD=${0##*\\}
 zipper=7z
 
 export TMPDIR="$(mktemp -d)"
@@ -26,7 +26,7 @@ What: $CMD  [-k keyfile] -[K|t|a|x] .. 7z encrypt with openssl id_rsa
   From: https://travis-ci.org/okigan/e7z
   See https://wiki.openssl.org/index.php/Command_Line_Utilities
 Example Usage:
-  $CMD -K id_rsa                        # first time, create id_rsa keypair 
+  $CMD -K id_rsa                        # first time, create id_rsa keypair
   $CMD -k id_rsa -a archive.7z *.txt    # pack
   $CMD           -l archive.7z          # list
   $CMD -k id_rsa -x archive.7z          # unpack
@@ -50,11 +50,11 @@ Options: $CMD
 }
 
 # Options
-while [ $# -gt 0 ]  ;do 
-	case $1 in 
+while [ $# -gt 0 ]  ;do
+	case $1 in
     -lcd) dir=${2:Need-lcd-dir} ; shift; need_dir $dir ; cd $dir ;;
 		-k)	keyfile=${2:?Need-keyfile}; shift ;;
-    -K) keyfile=${2:?}; shift; 
+    -K) keyfile=${2:?}; shift;
         warn "Creating keypair keyfile=$keyfile with openssl"
         # ssh-keygen -t rsa -f $keyfile -q -N "" # blank pass phrase.
         ssh-keygen -t rsa -f $keyfile -q
@@ -98,11 +98,11 @@ function testme() {
     warn "test failed"
   fi
 }
- 
+
 case $action in
   -t) testme ; exit ;;
   -o) warn otp=$(cat $otpfile | openssl pkeyutl -decrypt -inkey $keyfile) ; exit ;;
-	-a) 
+	-a)
     # generate otp (one time password)
     otp=$(openssl rand -hex 32|dos2unix)
     # Save encrypted otp = ssl_enc(keyfile,otp) in the archive, -si from stdin.
@@ -128,7 +128,7 @@ case $action in
       die "# opt extraction error otp=$otp!=$otp2 in $archive in $otpfile"
     else
       info "# opt extracted correctly"
-    fi 
+    fi
     ;;
 	-l) # list archive
     warn "$zipper l $archive"
