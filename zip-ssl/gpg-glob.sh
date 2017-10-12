@@ -1,8 +1,8 @@
 #!/usr/bin/bash
 # What: gpg-glob.sh for windows
 
-function die() { 1>&2 echo $* ; exit ;}
-function warn() { 1>&2 echo $* ;}
+function die() { 1>&2 echo "$*" ; exit ;}
+function warn() { 1>&2 echo "$*" ;}
 function info() { if [[ -n "$VERBOSE" ]]; then 1>&2 echo $* ;fi ;}
 function need_file(){ test -f "$1" || die "need_file $1" ;} 
 function need_dir(){ test -d "$1" || die "need_dir $1" ;} 

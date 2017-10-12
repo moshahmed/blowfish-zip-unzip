@@ -38,13 +38,7 @@ EOF_FOO
 CMD=${0##*\\}
 
 TAR=tar
-# TAR=c:/bin14/bin32/tar.exe
-# TAR=c:/cygwin64/bin/tar.exe
-
 GPG=gpg
-# GPG=c:/tools/gpg215/bin/gpg.exe .. this doesn't work with mosh.hmi
-# GPG=c:/bin14/gpg14/gpg.exe
-# GPG=c:/tools/gpg4win/gpg2.exe
 
 GPG_VERSION=$( $GPG --version | grep "^gpg" )
 

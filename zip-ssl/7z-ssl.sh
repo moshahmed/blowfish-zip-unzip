@@ -1,26 +1,21 @@
 #!/usr/bin/bash
 # What: 7z using public key for win7
-# $Header: c:/cvs/repo/mosh/perl/7z-ssl.sh,v 1.33 2017-10-10 15:39:54 a Exp $ 
+# $Header: c:/cvs/repo/mosh/perl/7z-ssl.sh,v 1.37 2017-10-12 15:39:21 a Exp $ 
 # GPL(C) moshahmed/at/gmail 
 
-function die() { 1>&2 echo $* ; exit ;}
+function die() { 1>&2 echo "$*" ; exit ;}
 function warn() { 1>&2 echo $* ;}
 function info() { if [[ -n "$verbose" ]]; then 1>&2 echo $* ;fi ;}
 function need_file(){ test -f "$1" || die "need_file $1" ;} 
 function need_dir(){ test -d "$1" || die "need_dir $1" ;} 
  
 CMD=${0##*\\} 
-# cgywin/7z will not write to c:/tmp/test.7z but to c:/cygwin/tmp/test.7z
 zipper=7z
-: ${TMP:=/tmp}
-TMP=${TMP/\/cygdrive\/c\//c:/}  # /cygdrive/c/tmp => c:/tmp
-TMPZ=$TMP
-log=$TMPZ/run.log
-
-mkdir -p $TMPZ
-keyfile=$TMPZ/id_rsa.tmp
-otpfile=$TMPZ/otp.ssl # encrypted otp with keyfile
-archive=$TMPZ/test.7z
+export TMPDIR="$(mktemp -d)"
+log=$TMPDIR/run.log
+keyfile=$TMPDIR/id_rsa.tmp
+otpfile=$TMPDIR/otp.ssl # encrypted otp with keyfile
+archive=$TMPDIR/test.7z
 verbose=
 action=
 args=
@@ -30,16 +25,18 @@ function usage() { 1>&2 echo "
 What: $CMD  [-k keyfile] -[K|t|a|x] .. 7z encrypt with openssl id_rsa
   From: https://travis-ci.org/okigan/e7z
   See https://wiki.openssl.org/index.php/Command_Line_Utilities
-Usage:
-  First time: \$ $cmd -K id_rsa    # Create a id_rsa keypair
-  Zipup \$ $CMD -k id_rsa a archive.7z input_files
-  Unzip \$ $CMD -k id_rsa x archive.7z
+Example Usage:
+  $CMD -K id_rsa                        # first time, create id_rsa keypair 
+  $CMD -k id_rsa -a archive.7z *.txt    # pack
+  $CMD           -l archive.7z          # list
+  $CMD -k id_rsa -x archive.7z          # unpack
 Where
-  TMPZ=$TMPZ, log=$log,
+  TMPDIR=$TMPDIR, log=$log,
   zipper=$zipper
   keyfile=$keyfile, otpfile=$otpfile
 Options: $CMD
   -a           .. archive
+  -l           .. list archive
   -x           .. extract
   -k keyfile   .. keyfile=~/.ssh/.id_rsa (default $keyfile)
   -K keyfile   .. make keyfile using ssh-keygen
@@ -67,6 +64,7 @@ while [ $# -gt 0 ]  ;do
 		-a) action=$1 ; archive=${2:?} ; shift ; shift; args=$* ; break ;;
     -o) action=$1 ; otpfile=${2:?} ; shift ; shift; args=$* ; break ;;
 		-x) action=$1 ; archive=${2:?} ; shift ; shift; args=$* ; break ;;
+		-l) action=$1 ; archive=${2:?} ; shift ; shift; args=$* ; break ;;
     -v) verbose=1 ;;
     -v=*) verbose=${1#-*=} ; info verbose=$verbose ;;
 		*) usage "Unknown option:'$*'" ;;
@@ -81,10 +79,8 @@ fi
 info "=== action=$action, archive=$archive, keyfile=$keyfile, args=$args"
 
 function testme() {
-  rm -rf $TMPZ 
-  mkdir -p $TMPZ
-  need_dir $TMPZ
-  cd $TMPZ
+  need_dir $TMPDIR
+  cd $TMPDIR
   if [[ ! -e "$keyfile" ]] ;then
     ssh-keygen -t rsa -f $keyfile -q -N ""
     info "# Generated openssl rsa keyfile=$keyfile"
@@ -133,6 +129,10 @@ case $action in
     else
       info "# opt extracted correctly"
     fi 
+    ;;
+	-l) # list archive
+    warn "$zipper l $archive"
+    $zipper l $archive -p$otp $args -x!$otpfile | perl -lne 'print if m/^---/.../^---/'
     ;;
 	-x)
     # Extract otp from archive using ssl keyfile, -so to stdout.
