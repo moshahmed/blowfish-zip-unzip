@@ -623,7 +623,6 @@ local int testkey(__G__ h, key)
         Trace((stdout, " %02x", hh[n]));
     }
 
-    /* Check the crc in header */
     Trace((stdout,
       "\n  lrec.crc= %08lx  crec.crc= %08lx  pInfo->ExtLocHdr= %s\n",
       GLOBAL(lrec.crc32), GLOBAL(pInfo->crc),
@@ -645,7 +644,6 @@ local int testkey(__G__ h, key)
                            (ush)(GLOBAL(lrec.crc32) >> 16)))
         return -1;  /* bad */
 #else
-    /* b has crc[0] */
     b = hh[RAND_HEAD_LEN-1];
     Trace((stdout, "  b = %02x  (crc >> 24) = %02x  (lrec.time >> 8) = %02x\n",
       b, (ush)(GLOBAL(lrec.crc32) >> 24),

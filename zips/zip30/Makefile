@@ -1,5 +1,5 @@
 # Makefile to build and test blowfish-zip-unzip with vs9 on windows xp + cygwin
-# $Header: c:/cvs/repo/github/bfz/zips/zip30/Makefile,v 1.1 2014-02-04 11:24:57 a Exp $
+# $Header: c:/cvs/repo/github/bfz/zips/zip30/Makefile,v 1.2 2015-04-15 15:32:11 a Exp $
 
 CL_VER := $(shell cl.exe /? 2>&1 | perl -nle 'print "$$1" if m/Version.(\d+)/')
 ifeq ($(CL_VER),)
@@ -7,6 +7,7 @@ ifeq ($(CL_VER),)
 endif
 
 vs9bin=$(shell cygpath -wam ../bin/$(dir $(lastword $(MAKEFILE_LIST)))/vs9)
+vc6bin=$(shell cygpath -wam ../bin/$(dir $(lastword $(MAKEFILE_LIST)))/vc6)
 gccbin=$(shell cygpath -wam ../bin/$(dir $(lastword $(MAKEFILE_LIST)))/gcc)
 CTMP=$(shell cygpath -wam $$TMP)
 # make a long password and also save it in c:/tmp/pass.txt
@@ -32,8 +33,9 @@ clean::
 	rm -rfv win32/cb12/{Debug,Release}/
 
 msdev::
-	@echo msdev $$(find | grep dsw)
-	@echo devenv $$(find | grep sln)
+	@echo Do the following
+	@echo .. msdev $$(find | grep dsw)
+	@echo .. devenv $$(find | grep sln)
 
 debug::
 	make vs9exe
@@ -59,8 +61,11 @@ multipass::
 	seq 1 6 > $(CTMP)/y.txt
 	$(vs9bin)/zip -P pass1x $(CTMP)/multipass.zip $(CTMP)/x.txt
 	$(vs9bin)/zip -P pass2y $(CTMP)/multipass.zip $(CTMP)/y.txt
-	$(vs9bin)/unzip -vtoP pass1x $(CTMP)/multipass.zip
-	$(vs9bin)/unzip -vtoP pass2y $(CTMP)/multipass.zip
+	-$(vs9bin)/unzip -vtoP pass1x $(CTMP)/multipass.zip
+	-$(vs9bin)/unzip -vtoP pass2y $(CTMP)/multipass.zip
+	@echo ==== Now trying with vc6/unzip
+	-$(vc6bin)/unzip -vtoP pass1x $(CTMP)/multipass.zip
+	-$(vc6bin)/unzip -vtoP pass2y $(CTMP)/multipass.zip
 
 make_text_data::
 	mkdir -p $(CTMP)/seq1 ;\
@@ -87,7 +92,7 @@ regr::
 	make make_bin_data
 	make make_text_data
 	$(vs9bin)/zip.exe $(bb) -Deruo -P $(password_long) $(CTMP)/seq12.zip $(CTMP)/seq1
-	        unzip.exe           -vtoP $(password_long) $(CTMP)/seq12.zip || true
+	       -unzip.exe           -vtoP $(password_long) $(CTMP)/seq12.zip
 	$(vs9bin)/unzip.exe $(bb)   -vtoP $(password_long) $(CTMP)/seq12.zip
 	$(vs9bin)/unzip.exe $(bb) -jod $(CTMP)/seq2 -P $(password_long) $(CTMP)/seq12.zip
 	diff -rq $(CTMP)/seq1 $(CTMP)/seq2

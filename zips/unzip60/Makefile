@@ -1,5 +1,5 @@
 # Makefile to build and test blowfish-zip-unzip with vs9 on windows xp + cygwin
-# $Header: c:/cvs/repo/github/bfz/zips/unzip60/Makefile,v 1.2 2014-02-05 16:16:23 a Exp $
+# $Header: c:/cvs/repo/github/bfz/zips/unzip60/Makefile,v 1.3 2015-04-15 15:32:11 a Exp $
 
 # Check for msvc9 compiler.
 CL_VER := $(shell cl.exe /? 2>&1 | perl -nle 'print "$$1" if m/Version.(\d+)/')
@@ -13,6 +13,7 @@ ifneq ($(IS_VC9),1)
 endif
 
 vs9bin=$(shell cygpath -wam ../bin/$(dir $(lastword $(MAKEFILE_LIST)))/vs9)
+vc6bin=$(shell cygpath -wam ../bin/$(dir $(lastword $(MAKEFILE_LIST)))/vc6)
 gccbin=$(shell cygpath -wam ../bin/$(dir $(lastword $(MAKEFILE_LIST)))/gcc)
 CTMP=$(shell cygpath -wam $$TMP)
 bb=--blowfish --blowfish
@@ -28,7 +29,7 @@ ifeq (0,${MAKELEVEL})
 	cd ../zip30/ && make vs9exe
 endif
 
-gcc::
+nmake::
 	nmake -f win32/makefile
 
 clean::
@@ -38,13 +39,14 @@ clean::
 	rm -rfv win32/vs9/*_Win32_*/
 	rm -rfv win32/cb12/{Debug,Release}/
 
+msdev:
 	@echo run mosh.cmd to set env
 	msdev ./win32/vc6/unzip.dsw &
 
 debug::
 	@echo make debug
 ifeq (0,${MAKELEVEL})
-	cd ../zip30/ && make vs9exe
+	cd ../zip30/ && make debug
 endif
 	make vs9exe
 	@echo =========================================
@@ -53,4 +55,23 @@ endif
 	@echo =========================================
 	@echo "#  === $(vs9bin)/unzip must print OK"
 	$(vs9bin)/unzip.exe $(bb) -vtP pass $(CTMP)/b.zip || true
+	@echo =========================================
+	@echo "# === TODO deBUG $(vs9bin)/unzip cannot decrypt y.txt from $(gccbin)/unzip"
+	@echo "NOW vs9 devenv > debug > unzip $(bb) -vtP pass $(CTMP)/b.zip in $(CTMP)"
+
+test2::
+	rm -fv $(CTMP)/x.txt $(CTMP)/d.zip
+	ls > $(CTMP)/x.txt
+	@echo ===========================================================
+	      $(vs9bin)/zip.exe   $(bb) -Deruo -P pass $(CTMP)/d.zip $(CTMP)/x.txt
+	@echo ===========================================================
+	      $(vs9bin)/unzip.exe $(bb) -vtP pass $(CTMP)/d.zip
+	@echo ===========================================================
+	      $(gccbin)/unzip.exe  $(bb) -vtP pass $(CTMP)/d.zip
+
+regr:
+	cd ../zip30 && make regr
+
+tags::
+	ctags --exclude=*.i -R . ../zip30 &
 

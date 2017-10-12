@@ -5,7 +5,6 @@
   (the contents of which are also included in zip.h) for terms of use.
   If, for some reason, all these files are missing, the Info-ZIP license
   also may be found at:  ftp://ftp.info-zip.org/pub/infozip/license.html
-
 */
 /*
   crypt.c (full version) by Info-ZIP.      Last revised:  [see crypt.h]
@@ -245,7 +244,6 @@ void crypthead(passwd, crc)
     for (n = 0; n < RAND_HEAD_LEN-2; n++) {
         header[n] = (uch)zencode(header[n], t);
     }
-
     header[RAND_HEAD_LEN-2] = (uch)zencode((int)(crc >> 16) & 0xff, t);
     header[RAND_HEAD_LEN-1] = (uch)zencode((int)(crc >> 24) & 0xff, t);
 
@@ -723,6 +721,7 @@ local int testkey(__G__ h, key)
 } /* end function testkey() */
 
 #endif /* UNZIP && !FUNZIP */
+
 #else /* !CRYPT */
 
 /* something "externally visible" to shut up compiler/linker warnings */

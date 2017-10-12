@@ -1,4 +1,4 @@
-# $Header: c:/cvs/repo/github/bfz/zips/Makefile,v 1.8 2015-04-12 04:06:42 a Exp $
+# $Header: c:/cvs/repo/github/bfz/zips/Makefile,v 1.9 2015-04-15 15:32:11 a Exp $
 
 # What: This makefile is for testing exe from different compilers
 #       and compiling with gcc.
@@ -32,12 +32,17 @@ bb=--blowfish
 test-ab-log::
 	make test-ab > ab.log 2>&1
 	dos2unix ab.log
+	grep -i error ab.log
 
 test-ab::
 	echo Testing with zip/unzip from different compilers
 	seq 10 20000 > $(CTMP)/a.txt
 	seq 1 30 > $(CTMP)/b.txt
+	# bina/zip and binb/unzip
 	for bina in $(binall) ;do \
+	    randu=$$(( $$RANDOM % 20 + 1 )) ;\
+	    mkpass="$$(mkpass.exe 1 $$randu $$randu 1 || \
+		       echo $$RANDOM.$$RANDOM.$$RANDOM)" ;\
 	  if [[ ! -f $$bina/unzip.exe ]]; then \
 		echo "Missing $$bina/zip.exe" ;\
 		continue ;\
@@ -50,10 +55,10 @@ test-ab::
 	    fi; \
 	    rm -f $(CTMP)/ab.zip ;\
 	    echo "{{{ B Comparing $$(basename $$bina)/zip and $$(basename $$binb)/unzip" ;\
-	    echo $$bina/zip   $(bb) -Duro -P pass $(CTMP)/ab.zip $(CTMP)/a.txt ;\
-	         $$bina/zip   $(bb) -Duro -P pass $(CTMP)/ab.zip $(CTMP)/a.txt ;\
-	    echo $$binb/unzip $(bb) -vt   -P pass $(CTMP)/ab.zip || true ;\
-	         $$binb/unzip $(bb) -vt   -P pass $(CTMP)/ab.zip || true ;\
+	    echo $$bina/zip   $(bb) -Duro -P $$mkpass $(CTMP)/ab.zip $(CTMP)/a.txt ;\
+	         $$bina/zip   $(bb) -Duro -P $$mkpass $(CTMP)/ab.zip $(CTMP)/a.txt ;\
+	    echo $$binb/unzip $(bb) -vt   -P $$mkpass $(CTMP)/ab.zip ;\
+	        -$$binb/unzip $(bb) -vt   -P $$mkpass $(CTMP)/ab.zip ;\
 	    echo "}}} B Compared $$(basename $$binb)" ;\
 	  done ;\
 	  echo "}}} A $$(basename $$bina)/zip" ;\
@@ -78,10 +83,26 @@ gcc-clean::
 	cd unzip60     && make -f win32/makefile.gcc clean
 
 cp-vc6::
-	@echo For vc6 exe, rebuild all with msdev ./unzip60/win32/vc6/unzip.dsw
-	mkdir -p bin/vc6
-	cp -vpf ./unzip60/win32/vc6/Debug/unzip.exe bin/vc6/
-	cp -vpf ./zip30/win32/vc6/Debug/zip.exe     bin/vc6/
+	@echo For vc6 exe, rebuild all with msdev
+	@if [[ ! -e zip30/win32/vc6/Debug/zip.exe ]] ;then \
+	  echo 'msdev ./unzip60/win32/vc6/unzip.dsw' ;\
+	  echo 'msdev ./zip30/win32/vc6/zip.dsw' ;\
+	else \
+	  mkdir -p bin/vc6 ;\
+	  cp -vpf ./unzip60/win32/vc6/Debug/unzip.exe bin/vc6/ ;\
+	  cp -vpf ./zip30/win32/vc6/Debug/zip.exe     bin/vc6/ ;\
+	fi ;\
+
+cp-vs9::
+	@echo For vs9 exe, rebuild all with devenv
+	@if [[ ! -e zip30/win32/vs9/zip___Win32_Debug/zip.exe ]] ;then \
+	  echo 'devenv zip30/win32/vs9/zip.sln /Build "Debug|Win32" /Project zip' ;\
+	  echo 'devenv unzip60/win32/vs9/unzip.sln /Build "Debug|Win32" /Project unzip' ;\
+	else \
+	  mkdir -p bin/vs9 ;\
+	  cp -vpf ./unzip60/win32/vs9/unzip__Win32_Debug/unzip.exe bin/vs9/ ;\
+	  cp -vpf ./zip30/win32/vs9/zip___Win32_Debug/zip.exe      bin/vs9/ ;\
+	fi ;\
 
 tags::
 	cd zip30   && ctags -R . &
