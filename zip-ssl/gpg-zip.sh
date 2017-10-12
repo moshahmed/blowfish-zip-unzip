@@ -197,12 +197,12 @@ selftest)
   rm -f $OUT
   date > date.1
   date > date.2
-	bash $0 -v=$verbose -0 -e -r Mosh.Hmi -o $OUT date.1 date.2
+  bash $0 -v=$verbose -0 -e -r Mosh.Hmi -o $OUT date.1 date.2
   need_file $OUT
   mv date.1 date.1.old
   mv date.2 date.2.old
-	bash $0 -v=$verbose -p=$GPASS -0 -d -ls $OUT
-	bash $0 -v=$verbose -p=$GPASS -0 -d $OUT
+  bash $0 -v=$verbose -p=$GPASS -0 -d -ls $OUT
+  bash $0 -v=$verbose -p=$GPASS -0 -d $OUT
   diff date.1 date.1.old ; error=$?
   if [ $error -eq 0 ] ; then
     warn "test passed"

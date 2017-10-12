@@ -54,9 +54,9 @@ Options: $CMD
 
 # Options
 while [ $# -gt 0 ]  ;do
-	case $1 in
+  case $1 in
     -lcd) dir=${2:Need-lcd-dir} ; shift; need_dir $dir ; cd $dir ;;
-		-k)	keyfile=${2:?Need-keyfile}; shift ;;
+    -k) keyfile=${2:?Need-keyfile}; shift ;;
     -K) keyfile=${2:?}; shift;
         warn "Creating keypair keyfile=$keyfile with openssl"
         # ssh-keygen -t rsa -f $keyfile -q -N "" # blank pass phrase.
@@ -64,15 +64,15 @@ while [ $# -gt 0 ]  ;do
         need_file $keyfile
         exit ;;
     -t) action=$1; shift ;;
-		-a) action=$1 ; archive=${2:?} ; shift ; shift; args=$* ; break ;;
+    -a) action=$1 ; archive=${2:?} ; shift ; shift; args=$* ; break ;;
     -o) action=$1 ; otpfile=${2:?} ; shift ; shift; args=$* ; break ;;
-		-x) action=$1 ; archive=${2:?} ; shift ; shift; args=$* ; break ;;
-		-l) action=$1 ; archive=${2:?} ; shift ; shift; args=$* ; break ;;
+    -x) action=$1 ; archive=${2:?} ; shift ; shift; args=$* ; break ;;
+    -l) action=$1 ; archive=${2:?} ; shift ; shift; args=$* ; break ;;
     -v) verbose=1 ;;
     -v=*) verbose=${1#-*=} ; info verbose=$verbose ;;
-		*) usage "Unknown option:'$*'" ;;
-	esac
-	shift
+    *) usage "Unknown option:'$*'" ;;
+  esac
+  shift
 done
 
 if [[ -z "$action" ]] ;then
@@ -107,11 +107,11 @@ function testme() {
 case $action in
   -t) testme ; exit ;;
   -o) warn otp=$(cat $otpfile | openssl pkeyutl -decrypt -inkey $keyfile) ; exit ;;
-	-a)
+  -a)
     # generate otp (one time password)
     otp=$(openssl rand -hex 32|dos2unix)
     # Save encrypted otp = ssl_enc(keyfile,otp) in the archive, -si from stdin.
-		echo $otp | openssl pkeyutl -encrypt -inkey $keyfile -out $otpfile
+    echo $otp | openssl pkeyutl -encrypt -inkey $keyfile -out $otpfile
     # cat otpfile | $zipper a $archive -si$otpfile
     need_file $otpfile
     info "# Generated otp=$otp "
@@ -121,7 +121,7 @@ case $action in
     $zipper          $archive $otpfile
     $zipper -u -P "$otp" $archive $args
     need_file $archive
-		info "# Archived $archive encrypted with otp in otpfile=$otpfile"
+    info "# Archived $archive encrypted with otp in otpfile=$otpfile"
     info "# otp=$otp"
     # Extract otp from archive using ssl keyfile, -so to stdout.
     if [[ -n "$verbose" ]] ;then
@@ -134,11 +134,11 @@ case $action in
       info "# opt extracted correctly"
     fi
     ;;
-	-l) # list archive
+  -l) # list archive
     warn "$zipper -lv $archive"
     $unzipper -vl $archive $args | perl -lne 'print if m/^---/.../^---/'
     ;;
-	-x)
+  -x)
     # Extract otp from archive using ssl keyfile, -so to stdout.
     otp=`$unzipper -p $archive "*$otpfile_base" | openssl pkeyutl -decrypt -inkey $keyfile`
     if [[ -z "$otp" ]] ;then
@@ -146,9 +146,9 @@ case $action in
     fi
     # use otp to extract archive.
     warn "# $unzipper           $archive $args -x */$otpfile_base"
-		        $unzipper -P "$otp" $archive $args -x */$otpfile_base
-		info "# Decrypted $archive with"
-		info "# otp=$otp"
-		;;
+            $unzipper -P "$otp" $archive $args -x */$otpfile_base
+    info "# Decrypted $archive with"
+    info "# otp=$otp"
+    ;;
 esac
 
