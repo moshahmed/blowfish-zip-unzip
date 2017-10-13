@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 # What: zip using public key for win7
-# $Header: c:/cvs/repo/mosh/perl/zip-ssl.sh,v 1.25 2017-10-13 10:34:07 a Exp $
+# $Header: c:/cvs/repo/mosh/perl/zip-ssl.sh,v 1.26 2017-10-13 10:49:25 a Exp $
 # GPL(C) moshahmed/at/gmail
 
 function die() { 1>&2 echo "$*" ; exit ;}
@@ -145,8 +145,8 @@ case $action in
       die "No otp=$otp in $archive in $otpfile"
     fi
     # use otp to extract archive.
-    warn "# $unzipper -P "$otp" $archive $args -!*/$otpfile_base"
-            $unzipper -P "$otp" $archive $args -!*/$otpfile_base
+    warn "# $unzipper -P "$otp" $archive $args -x *$otpfile_base"
+            $unzipper -P "$otp" $archive $args -x *$otpfile_base
     info "# Decrypted $archive with"
     info "# otp=$otp"
     ;;

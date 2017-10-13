@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 # What: 7z using public key for win7
-# $Header: c:/cvs/repo/mosh/perl/7z-ssl.sh,v 1.45 2017-10-13 10:34:06 a Exp $
+# $Header: c:/cvs/repo/mosh/perl/7z-ssl.sh,v 1.47 2017-10-13 10:57:47 a Exp $
 # GPL(C) moshahmed/at/gmail
 
 function die() { 1>&2 echo "$*" ; exit ;}
@@ -141,8 +141,9 @@ case $action in
       die "No otp=$otp in $archive in $otpfile"
     fi
     # use otp to extract archive.
-    warn "# $zipper x $archive              -x!$otpfile"
-            $zipper x $archive -p$otp $args -x!$otpfile >> $log 2>&1
+    otpbase=${otpfile//*\/}
+    warn "# $zipper x $archive -p$otp $args -x!$otpbase"
+            $zipper x $archive -p$otp $args -x!$otpbase >> $log 2>&1
     info "# Decrypted $archive with otp=$otp"
     ;;
   *) usage "Nothing to do '$action'?" ;;
