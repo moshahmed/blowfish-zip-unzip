@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 # GPL(C) moshahmed@gmail.com 2016-01-29
 # from https://github.com/github-archive/windows-msysgit/blob/master/bin/gpg-zip
-# $Id: gpg-zip.sh,v 1.30 2017-10-12 16:55:42 a Exp $
+# $Id: gpg-zip.sh,v 1.35 2017-10-13 08:23:09 a Exp $
 
 # gpg-archive - gpg-ized tar using the same format as PGP's PGP Zip.
 # (C) 2005 FSF This file is part of GnuPG.
@@ -32,7 +32,7 @@ function make_gpg_key() {
       %commit
       %echo done
 EOF_FOO
-  gpg --batch --gen-key foo
+  $GPG --batch --gen-key foo
 }
 
 CMD=${0##*\\}
@@ -50,7 +50,7 @@ gpg_args=-q
 tar_args=
 
 usage="\
-cvs id $Id: gpg-zip.sh,v 1.30 2017-10-12 16:55:42 a Exp $
+cvs id $Id: gpg-zip.sh,v 1.35 2017-10-13 08:23:09 a Exp $
 Usage: $CMD OPTIONS INFILES INDIRS .. Encrypt/decrypt/sign files into archive
 Options:
   [-h|--help]
@@ -179,13 +179,13 @@ create)
 ;;
 unpack)
   warn "== Unpacking $@ =="
-  info "$GPG $gpg_args $1 | $TAR $tar_args -xvf -" 1>&2
-        $GPG $gpg_args $1 | $TAR $tar_args -xvf -
+  info "$GPG $gpg_args -o- $1 | $TAR $tar_args -xvf -" 1>&2
+        $GPG $gpg_args -o- $1 | $TAR $tar_args -xvf -
 ;;
 list)
   warn "== Listing $@ =="
-  info "$GPG $gpg_args $1 | $TAR $tar_args -tf -" 1>&2
-        $GPG $gpg_args $1 | $TAR $tar_args -tf -
+  info "$GPG $gpg_args -o- $1 | $TAR $tar_args -tvf -" 1>&2
+        $GPG $gpg_args -o- $1 | $TAR $tar_args -tvf -
 ;;
 selftest)
   export GNUPGHOME="$(mktemp -d)"

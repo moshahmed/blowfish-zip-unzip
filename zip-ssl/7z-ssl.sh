@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 # What: 7z using public key for win7
-# $Header: c:/cvs/repo/mosh/perl/7z-ssl.sh,v 1.38 2017-10-12 16:17:15 a Exp $
+# $Header: c:/cvs/repo/mosh/perl/7z-ssl.sh,v 1.40 2017-10-12 17:01:13 a Exp $
 # GPL(C) moshahmed/at/gmail
 
 function die() { 1>&2 echo "$*" ; exit ;}

@@ -14,9 +14,7 @@ USERID=x
 GPG=gpg
 GPG_DRY="echo dry gpg"
 GPASS=
-: ${TMP:=/tmp}
-TMP=${TMP/\/cygdrive\/c\//c:/}  # /cygdrive/c/tmp => c:/tmp
-OUTDIR=$TMP
+OUTDIR=
 OUTEXT=
 VERBOSE=0
 OVERWRITE=0
@@ -26,9 +24,10 @@ function print_usage() {
 What: gpg-glob encrypts multiple-files
 Usage: $CMD OPTIONS INFILES =action=> OUTDIR/INFILES.OUTEXT
   -a=[c|d]     default -a=$ACTION
-  -o=OUTDIR    default -o=$OUTDIR
+  -o=OUTDIR    default is mktemp $(mktemp -u -d)
   -e=OUTEXT    default -e=$OUTEXT
-  -p=password  default -p=$GPASS
+  -p=          type in password
+  -p=password  gpg password
   -v           default verbose=$VERBOSE
   -w           default overwrite=$OVERWRITE
   -gpg=path    default=$GPG
@@ -93,11 +92,17 @@ if [[ -z "$OUTEXT" ]] ;then
   esac
 fi
 
+if [[ -z "$OUTDIR"  ]] ; then
+  OUTDIR="$(mktemp -d)" 
+  warn "OUTDIR=$OUTDIR"
+fi
+need_dir $OUTDIR
+
 for INFILE in $* ;do
   OUTFILE=${OUTDIR}/$(basename ${INFILE%.*}$OUTEXT)
   warn "$ACTION: $INFILE => $OUTFILE"
   if [[ -d $INFILE ]] ;then
-    print_usage "use tar -cvf $INFILE | gpg -c -o $OUTFILE"
+    print_usage "Use: tar -cvf $INFILE | $GPG -c -o $OUTFILE"
   fi
   if [[ -e $OUTFILE && $OVERWRITE -eq 0 ]] ;then
     print_usage "Use -w to overwrite $OUTFILE"

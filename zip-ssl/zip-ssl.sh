@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 # What: zip using public key for win7
-# $Header: c:/cvs/repo/mosh/perl/zip-ssl.sh,v 1.18 2017-10-12 16:17:15 a Exp $
+# $Header: c:/cvs/repo/mosh/perl/zip-ssl.sh,v 1.20 2017-10-12 17:01:14 a Exp $
 # GPL(C) moshahmed/at/gmail
 
 function die() { 1>&2 echo "$*" ; exit ;}
