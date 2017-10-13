@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 # What: zip using public key for win7
-# $Header: c:/cvs/repo/mosh/perl/zip-ssl.sh,v 1.21 2017-10-13 08:57:55 a Exp $
+# $Header: c:/cvs/repo/mosh/perl/zip-ssl.sh,v 1.25 2017-10-13 10:34:07 a Exp $
 # GPL(C) moshahmed/at/gmail
 
 function die() { 1>&2 echo "$*" ; exit ;}
@@ -26,61 +26,31 @@ args=
 
 
 function usage() { 1>&2 echo "
-What: $CMD  [-k keyfile] -[K|t|a|x] .. zip encrypt with openssl id_rsa
+What: $CMD [Options] [actions] [zip options] .. zip encrypt with openssl id_rsa
   See https://wiki.openssl.org/index.php/Command_Line_Utilities
+Options:
+  -k keyfile   .. keyfile=~/.ssh/.id_rsa (default $keyfile)
+  -lcd dir     .. chdir dir
+  -v=1         .. verbose
+Actions:
+  -a           .. archive
+  -l           .. list archive
+  -x           .. extract
+Actions-setup:
+  -K keyfile   .. make keyfile using ssh-keygen
+  -o otpfile   .. extract otp from otpfile using keyfile
+  -t           .. test
+Where:
+  TMPDIR=mktemp -d, zipper=$zipper, unzipper=$unzipper
 Example Usage:
   $CMD -K id_rsa                             # first time, create id_rsa keypair
   $CMD -k id_rsa -a archive.zip *.txt        # pack
   $CMD           -l archive.zip               # list
   $CMD -k id_rsa -x archive.zip              # unpack
-Where
-  TMPDIR=$TMPDIR, log=$log,
-  zipper=$zipper, unzipper=$unzipper
-  keyfile=$keyfile, otpfile=$otpfile
-Options: $CMD
-  -a           .. archive
-  -l           .. list archive
-  -x           .. extract
-  -k keyfile   .. keyfile=~/.ssh/.id_rsa (default $keyfile)
-  -K keyfile   .. make keyfile using ssh-keygen
-  -o otpfile   .. extract otp from otpfile using keyfile
-  -lcd dir     .. chdir dir
-  -t           .. test
-  -v=1         .. verbose
 "
   echo $*
   exit
 }
-
-# Options
-while [ $# -gt 0 ]  ;do
-  case $1 in
-    -lcd) dir=${2:Need-lcd-dir} ; shift; need_dir $dir ; cd $dir ;;
-    -k) keyfile=${2:?Need-keyfile}; shift ;;
-    -K) keyfile=${2:?}; shift;
-        warn "Creating keypair keyfile=$keyfile with openssl"
-        # ssh-keygen -t rsa -f $keyfile -q -N "" # blank pass phrase.
-        ssh-keygen -t rsa -f $keyfile -q
-        need_file $keyfile
-        exit ;;
-    -v) verbose=1 ;;
-    -v=*) verbose=${1#-*=} ; info verbose=$verbose ;;
-    -t) action=$1 ;;
-    # break after actions, remaining args for zip
-    -a) action=$1 ; archive=${2:?} ; shift ; shift; args=$* ; break ;;
-    -o) action=$1 ; otpfile=${2:?} ; shift ; shift; args=$* ; break ;;
-    -x) action=$1 ; archive=${2:?} ; shift ; shift; args=$* ; break ;;
-    -l) action=$1 ; archive=${2:?} ; shift ; shift; args=$* ; break ;;
-    *) usage "Unknown option:'$*'" ;;
-  esac
-  shift
-done
-
-if [[ -z "$action" ]] ;then
-  usage "Nothing to do?"
-fi
-
-info "=== action=$action, archive=$archive, keyfile=$keyfile, args=$args"
 
 function testme() {
   need_dir $TMPDIR
@@ -105,8 +75,37 @@ function testme() {
   fi
 }
 
+function make_ssh_key() {
+  local keyfile=$1
+  warn "Creating keypair keyfile=$keyfile with ssh-keygen"
+  ssh-keygen -t rsa -f $keyfile -q
+  need_file $keyfile
+  need_file $keyfile.pub
+}
+
+# Options
+while [ $# -gt 0 ]  ;do
+  case $1 in
+    -lcd) dir=${2:Need-lcd-dir} ; shift; need_dir $dir ; cd $dir ;;
+    -k) keyfile=${2:?Need-keyfile}; shift ;;
+    -K) keyfile=${2:?}; shift;
+        make_ssh_key $keyfile
+        exit ;;
+    -v) verbose=1 ;;
+    -v=*) verbose=${1#-*=} ; info verbose=$verbose ;;
+    # break after actions, remaining args for zip
+    -a) action=$1 ; archive=${2:?} ; shift ; shift; args=$* ; break ;;
+    -o) action=$1 ; otpfile=${2:?} ; shift ; shift; args=$* ; break ;;
+    -x) action=$1 ; archive=${2:?} ; shift ; shift; args=$* ; break ;;
+    -l) action=$1 ; archive=${2:?} ; shift ; shift; args=$* ; break ;;
+    -t) testme ; exit ;;
+    *) usage "Unknown option:'$*'" ;;
+  esac
+  shift
+done
+
+info "=== action=$action, archive=$archive, keyfile=$keyfile, args=$args"
 case $action in
-  -t) testme ; exit ;;
   -o) warn otp=$(cat $otpfile | openssl pkeyutl -decrypt -inkey $keyfile) ; exit ;;
   -a)
     # generate otp (one time password)
@@ -151,5 +150,6 @@ case $action in
     info "# Decrypted $archive with"
     info "# otp=$otp"
     ;;
+  *) usage "Nothing to do '$action'?" ;;
 esac
 
