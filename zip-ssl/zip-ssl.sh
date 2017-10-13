@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 # What: zip using public key for win7
-# $Header: c:/cvs/repo/mosh/perl/zip-ssl.sh,v 1.20 2017-10-12 17:01:14 a Exp $
+# $Header: c:/cvs/repo/mosh/perl/zip-ssl.sh,v 1.21 2017-10-13 08:57:55 a Exp $
 # GPL(C) moshahmed/at/gmail
 
 function die() { 1>&2 echo "$*" ; exit ;}
@@ -63,13 +63,14 @@ while [ $# -gt 0 ]  ;do
         ssh-keygen -t rsa -f $keyfile -q
         need_file $keyfile
         exit ;;
-    -t) action=$1; shift ;;
+    -v) verbose=1 ;;
+    -v=*) verbose=${1#-*=} ; info verbose=$verbose ;;
+    -t) action=$1 ;;
+    # break after actions, remaining args for zip
     -a) action=$1 ; archive=${2:?} ; shift ; shift; args=$* ; break ;;
     -o) action=$1 ; otpfile=${2:?} ; shift ; shift; args=$* ; break ;;
     -x) action=$1 ; archive=${2:?} ; shift ; shift; args=$* ; break ;;
     -l) action=$1 ; archive=${2:?} ; shift ; shift; args=$* ; break ;;
-    -v) verbose=1 ;;
-    -v=*) verbose=${1#-*=} ; info verbose=$verbose ;;
     *) usage "Unknown option:'$*'" ;;
   esac
   shift
@@ -145,8 +146,8 @@ case $action in
       die "No otp=$otp in $archive in $otpfile"
     fi
     # use otp to extract archive.
-    warn "# $unzipper           $archive $args -x */$otpfile_base"
-            $unzipper -P "$otp" $archive $args -x */$otpfile_base
+    warn "# $unzipper -P "$otp" $archive $args -!*/$otpfile_base"
+            $unzipper -P "$otp" $archive $args -!*/$otpfile_base
     info "# Decrypted $archive with"
     info "# otp=$otp"
     ;;

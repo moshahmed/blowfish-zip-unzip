@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 # What: 7z using public key for win7
-# $Header: c:/cvs/repo/mosh/perl/7z-ssl.sh,v 1.40 2017-10-12 17:01:13 a Exp $
+# $Header: c:/cvs/repo/mosh/perl/7z-ssl.sh,v 1.41 2017-10-13 08:57:55 a Exp $
 # GPL(C) moshahmed/at/gmail
 
 function die() { 1>&2 echo "$*" ; exit ;}
@@ -60,13 +60,14 @@ while [ $# -gt 0 ]  ;do
         ssh-keygen -t rsa -f $keyfile -q
         need_file $keyfile
         exit ;;
-    -t) action=$1; shift ;;
+    -v=*) verbose=${1#-*=} ; info verbose=$verbose ;;
+    -v) verbose=1 ;;
+    -t) action=$1 ;;
+    # break after actions, remaining args for 7z
     -a) action=$1 ; archive=${2:?} ; shift ; shift; args=$* ; break ;;
     -o) action=$1 ; otpfile=${2:?} ; shift ; shift; args=$* ; break ;;
     -x) action=$1 ; archive=${2:?} ; shift ; shift; args=$* ; break ;;
     -l) action=$1 ; archive=${2:?} ; shift ; shift; args=$* ; break ;;
-    -v) verbose=1 ;;
-    -v=*) verbose=${1#-*=} ; info verbose=$verbose ;;
     *) usage "Unknown option:'$*'" ;;
   esac
   shift
