@@ -1,11 +1,11 @@
 #!/usr/bin/bash
 # What: zip using public key for win7
-# $Header: c:/cvs/repo/mosh/perl/zip-ssl.sh,v 1.26 2017-10-13 10:49:25 a Exp $
+# $Header: c:/cvs/repo/mosh/perl/zip-ssl.sh,v 1.28 2017-10-14 11:05:40 a Exp $
 # GPL(C) moshahmed/at/gmail
 
-function die() { 1>&2 echo "$*" ; exit ;}
-function warn() { 1>&2 echo $* ;}
-function info() { if [[ -n "$verbose" ]]; then 1>&2 echo $* ;fi ;}
+function die() {  1>&2 echo "$*" ; exit ;}
+function warn() { 1>&2 echo "$*" ;}
+function info() { if [[ -n "$verbose" ]]; then 1>&2 echo "$*" ;fi ;}
 function need_file(){ test -f "$1" || die "need_file $1" ;}
 function need_dir(){ test -d "$1" || die "need_dir $1" ;}
 
@@ -17,8 +17,8 @@ export TMPDIR="$(mktemp -d)"
 log=$TMPDIR/run.log
 
 keyfile=$TMPDIR/id_rsa.tmp
-otpfile=$TMPDIR/otp.ssl # encrypted otp with keyfile
-otpfile_base=`basename $otpfile`
+otpfile_base=otp.ssl
+otpfile=$TMPDIR/$otpfile_base # encrypted otp with keyfile
 archive=$TMPDIR/test.zip
 verbose=
 action=
@@ -64,8 +64,8 @@ function testme() {
   info "# bash $0 -v=$verbose -k $keyfile -a $archive date.txt"
           bash $0 -v=$verbose -k $keyfile -a $archive date.txt
   need_file $archive
-  info "# bash $0 -v=$verbose -k $keyfile -x $archive date.txt -d out"
-          bash $0 -v=$verbose -k $keyfile -x $archive date.txt -d out
+  info "# bash $0 -v=$verbose -k $keyfile -x $archive -d out"
+          bash $0 -v=$verbose -k $keyfile -x $archive -d out
   need_file out/date.txt
   diff   $PWD/date.txt $PWD/out/date.txt ; error=$?
   if [ $error -eq 0 ] ; then
@@ -94,11 +94,11 @@ while [ $# -gt 0 ]  ;do
     -v) verbose=1 ;;
     -v=*) verbose=${1#-*=} ; info verbose=$verbose ;;
     # break after actions, remaining args for zip
-    -a) action=$1 ; archive=${2:?} ; shift ; shift; args=$* ; break ;;
-    -o) action=$1 ; otpfile=${2:?} ; shift ; shift; args=$* ; break ;;
-    -x) action=$1 ; archive=${2:?} ; shift ; shift; args=$* ; break ;;
-    -l) action=$1 ; archive=${2:?} ; shift ; shift; args=$* ; break ;;
-    -t) testme ; exit ;;
+    -a) action=$1 ; archive=${2:?} ; shift 2; args=$* ; break ;;
+    -o) action=$1 ; otpfile=${2:?} ; shift 2; args=$* ; break ;;
+    -x) action=$1 ; archive=${2:?} ; shift 2; args=$* ; break ;;
+    -l) action=$1 ; archive=${2:?} ; shift 2; args=$* ; break ;;
+    -t) shift ; testme ; exit ;;
     *) usage "Unknown option:'$*'" ;;
   esac
   shift
@@ -118,7 +118,7 @@ case $action in
     info "# Encryped opt with $keyfile to otpfile=$otpfile"
     # save otpfile unencrypted
     warn "# zip $archive"
-    $zipper          $archive $otpfile
+    $zipper -j           $archive $otpfile
     $zipper -u -P "$otp" $archive $args
     need_file $archive
     info "# Archived $archive encrypted with otp in otpfile=$otpfile"
@@ -145,8 +145,8 @@ case $action in
       die "No otp=$otp in $archive in $otpfile"
     fi
     # use otp to extract archive.
-    warn "# $unzipper -P "$otp" $archive $args -x *$otpfile_base"
-            $unzipper -P "$otp" $archive $args -x *$otpfile_base
+    warn "# $unzipper -P        $archive $args -x $otpfile_base"
+            $unzipper -P "$otp" $archive $args -x $otpfile_base
     info "# Decrypted $archive with"
     info "# otp=$otp"
     ;;

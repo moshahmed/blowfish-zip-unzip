@@ -1,11 +1,11 @@
 #!/usr/bin/bash
 # What: 7z using public key for win7
-# $Header: c:/cvs/repo/mosh/perl/7z-ssl.sh,v 1.47 2017-10-13 10:57:47 a Exp $
+# $Header: c:/cvs/repo/mosh/perl/7z-ssl.sh,v 1.48 2017-10-14 11:05:39 a Exp $
 # GPL(C) moshahmed/at/gmail
 
 function die() { 1>&2 echo "$*" ; exit ;}
-function warn() { 1>&2 echo $* ;}
-function info() { if [[ -n "$verbose" ]]; then 1>&2 echo $* ;fi ;}
+function warn() { 1>&2 echo "$*" ;}
+function info() { if [[ -n "$verbose" ]]; then 1>&2 echo "$*" ;fi ;}
 function need_file(){ test -f "$1" || die "need_file $1" ;}
 function need_dir(){ test -d "$1" || die "need_dir $1" ;}
 
@@ -89,11 +89,11 @@ while [ $# -gt 0 ]  ;do
     -v=*) verbose=${1#-*=} ; info verbose=$verbose ;;
     -v) verbose=1 ;;
     # break after actions, remaining args for 7z
-    -a) action=$1 ; archive=${2:?} ; shift ; shift; args=$* ; break ;;
-    -o) action=$1 ; otpfile=${2:?} ; shift ; shift; args=$* ; break ;;
-    -x) action=$1 ; archive=${2:?} ; shift ; shift; args=$* ; break ;;
-    -l) action=$1 ; archive=${2:?} ; shift ; shift; args=$* ; break ;;
-    -t) testme ; exit ;;
+    -a) action=$1 ; archive=${2:?} ; shift 2; args=$* ; break ;;
+    -o) action=$1 ; otpfile=${2:?} ; shift 2; args=$* ; break ;;
+    -x) action=$1 ; archive=${2:?} ; shift 2; args=$* ; break ;;
+    -l) action=$1 ; archive=${2:?} ; shift 2; args=$* ; break ;;
+    -t) shift; testme ; exit ;;
     *) usage "Unknown option:'$*'" ;;
   esac
   shift

@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 # GPL(C) moshahmed@gmail.com 2016-01-29
 # from https://github.com/github-archive/windows-msysgit/blob/master/bin/gpg-zip
-# $Id: gpg-zip.sh,v 1.35 2017-10-13 08:23:09 a Exp $
+# $Id: gpg-zip.sh,v 1.36 2017-10-14 11:05:40 a Exp $
 
 # gpg-archive - gpg-ized tar using the same format as PGP's PGP Zip.
 # (C) 2005 FSF This file is part of GnuPG.
@@ -10,9 +10,9 @@
 # Unclear on whether there is a distinction here between
 # the GNU or POSIX variant of USTAR.
 
-function die() { 1>&2 echo "$*" ; exit ;}
-function warn() { 1>&2 echo $* ;}
-function info() { if [[ -n "$verbose" ]]; then 1>&2 echo $* ;fi ;}
+function die() {  1>&2 echo "$*" ; exit ;}
+function warn() { 1>&2 echo "$*" ;}
+function info() { if [[ -n "$verbose" ]]; then 1>&2 echo "$*" ;fi ;}
 function need_file(){ test -f "$1" || die "need_file $1" ;}
 function need_dir(){ test -d "$1" || die "need_dir $1" ;}
 
@@ -50,7 +50,7 @@ gpg_args=-q
 tar_args=
 
 usage="\
-cvs id $Id: gpg-zip.sh,v 1.35 2017-10-13 08:23:09 a Exp $
+cvs id $Id: gpg-zip.sh,v 1.36 2017-10-14 11:05:40 a Exp $
 Usage: $CMD OPTIONS INFILES INDIRS .. Encrypt/decrypt/sign files into archive
 Options:
   [-h|--help]

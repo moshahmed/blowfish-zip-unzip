@@ -4,7 +4,7 @@
 
 function die() { 1>&2 echo "$*" ; exit ;}
 function warn() { 1>&2 echo "$*" ;}
-function info() { if [[ -n "$VERBOSE" ]]; then 1>&2 echo $* ;fi ;}
+function info() { if [[ -n "$VERBOSE" ]]; then 1>&2 echo "$*" ;fi ;}
 function need_file(){ test -f "$1" || die "need_file $1" ;}
 function need_dir(){ test -d "$1" || die "need_dir $1" ;}
 
@@ -61,20 +61,18 @@ for i in $* ;do # PROCESS OPTIONS
   case $i in
   -*)
     case $i in
-      -0)  GPG=$GPG_DRY ;;
-      -v)  VERBOSE=1 ;;
-      -a=c) ACTION=c
-        ;;
-      -a=d) ACTION=d
-        ;;
-      -w)  OVERWRITE=1 ;;
-      -debug) set -x ;;
+      -a=c)   ACTION=c ;;
+      -a=d)   ACTION=d ;;
+      -w)     OVERWRITE=1 ;;
       -gpg=*) GPG=${1#-gpg=} ;;
-      -e=*) OUTEXT=${1#-e=} ;;
-      -o=*) OUTDIR=${1#-o=} ;;
-      -p=*) GPASS=${1#-p=} ;;
-      -[h?]) print_usage ;;
-      *) print_usage "Unknown option $i" ;;
+      -e=*)   OUTEXT=${1#-e=} ;;
+      -o=*)   OUTDIR=${1#-o=} ;;
+      -p=*)   GPASS=${1#-p=} ;;
+      -[h?])  print_usage ;;
+      -v)     VERBOSE=1 ;;
+      -0)     GPG=$GPG_DRY ;;
+      -debug) set -x ;;
+      *)      print_usage "Unknown option $i" ;;
     esac
     shift ;;
   *) break ;;
