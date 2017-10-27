@@ -1,7 +1,9 @@
 #!/usr/bin/bash
 # What: 7z/zip using idrsa public key
-# $Header: c:/cvs/repo/mosh/perl/7z-ssl.sh,v 1.61 2017-10-27 04:00:31 a Exp $
+# $Header: c:/cvs/repo/mosh/perl/7z-ssl.sh,v 1.63 2017-10-27 08:35:39 a Exp $
 # GPL(C) moshahmed/at/gmail
+# from: https://travis-ci.org/okigan/e7z
+#   see https://wiki.openssl.org/index.php/Command_Line_Utilities
 
 function die() { 1>&2 echo -e "$*" ; exit ;}
 function warn() { 1>&2 echo -e "$*" ;}
@@ -13,8 +15,6 @@ CMD=${0##*\\}
 
 function usage() { 1>&2 echo "
 What: $CMD [Options] [Actions] [archive] [args] .. 7z/zip encrypt args into archive with openssl id_rsa
-  From: https://travis-ci.org/okigan/e7z
-    and https://wiki.openssl.org/index.php/Command_Line_Utilities
 Actions:
   -a archive paths  .. pack    paths into archive (*.7z or *.zip)
   -x archive        .. extract files from archive (*.7z or *.zip)
@@ -32,10 +32,6 @@ Example Usage:
 }
 
 
-export TMPDIR=$TMP
-need_dir $TMPDIR
-
-log=$TMPDIR/run.log
 keyfile=$HOME/.ssh/id_rsa
 pemfile=$HOME/.ssh/id_rsa.pem.pub
 otpfile=otp.ssl # encrypted otp with keyfile
@@ -82,7 +78,6 @@ case $action in
     info "# Encryped opt with $pemfile to otpfile=$otpfile"
     # Save encrypted otp = otpfile = ssl_enc(keyfile,otp) in the archive
     info "# Encrypting $archive with otpfile=$otpfile=$otp"
-set -xv
     case $archive in
       *.7z) cat $otpfile |
         7z a            $archive -si$otpfile
@@ -95,7 +90,6 @@ set -xv
     ;;
   -x) need_file $archive
     # Extract otp from archive using keyfile
-set -xv
     case $archive in
       *.7z) otp=$(7z x -so $archive $otpfile | openssl pkeyutl -decrypt -inkey $keyfile ) ;;
       *.zip) otp=$(unzip -p $archive $otpfile | openssl pkeyutl -decrypt -inkey $keyfile ) ;;
