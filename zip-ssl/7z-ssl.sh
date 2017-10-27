@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 # What: 7z/zip using idrsa public key
-# $Header: c:/cvs/repo/mosh/perl/7z-ssl.sh,v 1.60 2017-10-27 03:50:59 a Exp $
+# $Header: c:/cvs/repo/mosh/perl/7z-ssl.sh,v 1.61 2017-10-27 04:00:31 a Exp $
 # GPL(C) moshahmed/at/gmail
 
 function die() { 1>&2 echo -e "$*" ; exit ;}
@@ -82,6 +82,7 @@ case $action in
     info "# Encryped opt with $pemfile to otpfile=$otpfile"
     # Save encrypted otp = otpfile = ssl_enc(keyfile,otp) in the archive
     info "# Encrypting $archive with otpfile=$otpfile=$otp"
+set -xv
     case $archive in
       *.7z) cat $otpfile |
         7z a            $archive -si$otpfile
@@ -94,9 +95,10 @@ case $action in
     ;;
   -x) need_file $archive
     # Extract otp from archive using keyfile
+set -xv
     case $archive in
       *.7z) otp=$(7z x -so $archive $otpfile | openssl pkeyutl -decrypt -inkey $keyfile ) ;;
-      *.zip) otp=$(unzip -c $archive $otpfile | openssl pkeyutl -decrypt -inkey $keyfile ) ;;
+      *.zip) otp=$(unzip -p $archive $otpfile | openssl pkeyutl -decrypt -inkey $keyfile ) ;;
       esac
     if [[ -z "$otp" ]] ;then
       die "No otp=$otp in $archive/$otpfile"
