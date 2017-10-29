@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 # What: 7z/zip using idrsa public key
-# $Header: c:/cvs/repo/mosh/perl/7z-ssl.sh,v 1.63 2017-10-27 08:35:39 a Exp $
+# $Header: c:/cvs/repo/mosh/perl/7z-ssl.sh,v 1.65 2017-10-29 14:56:10 a Exp $
 # GPL(C) moshahmed/at/gmail
 # from: https://travis-ci.org/okigan/e7z
 #   see https://wiki.openssl.org/index.php/Command_Line_Utilities
@@ -13,7 +13,11 @@ function need_dir(){ test -d "$1" || die "need_dir $*" ;}
 
 CMD=${0##*\\}
 
-function usage() { 1>&2 echo "
+
+function usage() {
+  keyfile=\$HOME/.ssh/id_rsa
+  pemfile=$keyfile
+1>&2 echo "
 What: $CMD [Options] [Actions] [archive] [args] .. 7z/zip encrypt args into archive with openssl id_rsa
 Actions:
   -a archive paths  .. pack    paths into archive (*.7z or *.zip)
@@ -24,17 +28,19 @@ Options:
     pemfile made with, ssh-keygen -f keyfile -e -m PKCS8 > pemfile
   -v=1           .. verbose
 Example Usage:
-  $CMD -pem id_rsa.pem.pub -a archive.zip *.txt    # pack
-  $CMD -key id_rsa         -x archive.zip          # unpack
+  # keyfile=$keyfile
+  # pemfile=$pemfile
+  # ssh-keygen -f \$keyfile -e -m PKCS8 > \$pemfile
+  # $CMD -pem \$pemfile -a archive.zip *.txt    # pack, no passphrase needed.
+  # $CMD -key \$keyfile -x archive.zip          # unpack, need private key passphrase
 "
   echo "$*"
   exit
 }
 
-
 keyfile=$HOME/.ssh/id_rsa
 pemfile=$HOME/.ssh/id_rsa.pem.pub
-otpfile=otp.ssl # encrypted otp with keyfile
+otpfile=$TMP/otp.ssl # encrypted otp with keyfile
 archive=
 verbose=
 action=
