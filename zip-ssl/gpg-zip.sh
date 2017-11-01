@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 # GPL(C) moshahmed@gmail.com 2016-01-29
 # from https://github.com/github-archive/windows-msysgit/blob/master/bin/gpg-zip
-# $Id: gpg-zip.sh,v 1.36 2017-10-14 11:05:40 a Exp $
+# $Id: gpg-zip.sh,v 1.37 2017-11-01 10:54:42 a Exp $
 
 # gpg-archive - gpg-ized tar using the same format as PGP's PGP Zip.
 # (C) 2005 FSF This file is part of GnuPG.
@@ -16,6 +16,8 @@ function info() { if [[ -n "$verbose" ]]; then 1>&2 echo "$*" ;fi ;}
 function need_file(){ test -f "$1" || die "need_file $1" ;}
 function need_dir(){ test -d "$1" || die "need_dir $1" ;}
 
+USERID=$USERNAME$LOGNAME@$COMPUTERNAME$HOSTNAME
+
 function make_gpg_key() {
   warn "== make_gpg_key GPASS=$GPASS GNUPGHOME=$GNUPHOME"
   cat > foo <<EOF_FOO
@@ -24,9 +26,9 @@ function make_gpg_key() {
       Key-Length: 1024
       Subkey-Type: ELG-E
       Subkey-Length: 1024
-      Name-Real: Mosh.Hmi
+      Name-Real: $USERID
       Name-Comment: test
-      Name-Email: mosh+Hmi@hmi-tech.net
+      Name-Email: $USERID
       Expire-Date: 0
       Passphrase: $GPASS
       %commit
@@ -50,7 +52,7 @@ gpg_args=-q
 tar_args=
 
 usage="\
-cvs id $Id: gpg-zip.sh,v 1.36 2017-10-14 11:05:40 a Exp $
+cvs id $Id: gpg-zip.sh,v 1.37 2017-11-01 10:54:42 a Exp $
 Usage: $CMD OPTIONS INFILES INDIRS .. Encrypt/decrypt/sign files into archive
 Options:
   [-h|--help]
@@ -150,8 +152,8 @@ while test $# -gt 0 ; do
       shift 2
       ;;
     --tar)
-      TAR=$1
-      shift
+      TAR=$2
+      shift 2
       ;;
     --tar-args)
       tar_args="$tar_args $2"
@@ -176,17 +178,17 @@ create)
   warn "== Packing $@ =="
   info "$TAR -cf - "$@" | $GPG --set-filename x.tar $gpg_args" 1>&2
         $TAR -cf - "$@" | $GPG --set-filename x.tar $gpg_args
-;;
+  ;;
 unpack)
   warn "== Unpacking $@ =="
   info "$GPG $gpg_args -o- $1 | $TAR $tar_args -xvf -" 1>&2
         $GPG $gpg_args -o- $1 | $TAR $tar_args -xvf -
-;;
+  ;;
 list)
   warn "== Listing $@ =="
   info "$GPG $gpg_args -o- $1 | $TAR $tar_args -tvf -" 1>&2
         $GPG $gpg_args -o- $1 | $TAR $tar_args -tvf -
-;;
+  ;;
 selftest)
   export GNUPGHOME="$(mktemp -d)"
   cd $GNUPGHOME
@@ -197,7 +199,7 @@ selftest)
   rm -f $OUT
   date > date.1
   date > date.2
-  bash $0 -v=$verbose -0 -e -r Mosh.Hmi -o $OUT date.1 date.2
+  bash $0 -v=$verbose -0 -e -r $USERID -o $OUT date.1 date.2
   need_file $OUT
   mv date.1 date.1.old
   mv date.2 date.2.old

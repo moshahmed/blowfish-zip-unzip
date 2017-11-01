@@ -16,14 +16,13 @@ GPG_DRY="echo dry gpg"
 GPASS=
 OUTDIR=
 OUTEXT=
-VERBOSE=0
+VERBOSE=
 OVERWRITE=0
 
-function print_usage() {
-  2>&1 echo "\
+function print_usage() { 2>&1 echo "\
 What: gpg-glob encrypts multiple-files
-Usage: $CMD OPTIONS INFILES =action=> OUTDIR/INFILES.OUTEXT
-  -a=[c|d]     default -a=$ACTION
+Usage: $CMD ACTION -OPTIONS INFILES =action=> OUTDIR/INFILES.OUTEXT
+  ACTION is  c or d     default $ACTION
   -o=OUTDIR    default is mktemp $(mktemp -u -d)
   -e=OUTEXT    default -e=$OUTEXT
   -p=          type in password
@@ -34,35 +33,37 @@ Usage: $CMD OPTIONS INFILES =action=> OUTDIR/INFILES.OUTEXT
   -0           dryrun, GPG_DRY=$GPG_DRY
   -debug       to debug this bash script
 
-Example:
-  $CMD -a=c -w -p=x -o=$TMP      *.txt
-  $CMD -a=d -w -p=x -o=c:/temp $TMP/*.gpg
-
+Usage examples:
+  # $CMD c -w -p=x -o=\$TMP   *.txt
+  # $CMD d -w -p=x -o=\$TMP  \$TMP/*.gpg
 $*
 "
   exit
 }
 
 function get_pass() {
-  if [[ -z "$GPASS" ]] ;then
-    read -s -p "password=" GPASS
-    echo ""
-  else
+  if [[ -n "$GPASS" ]] ;then
     return
   fi
+  read -s -p "password=" GPASS
+  echo ""
   if [[ -z "$GPASS" ]] ;then
     print_usage "Need password"
   fi
   info "hash(password)=$(echo $GPASS | sha256sum | perl -lane 'print $F[0]')"
-  warn "hash(password)=$(echo $GPASS | sha256sum | perl -lane 'print substr($F[0],0,3)')"
+  # warn "hash(password)=$(echo $GPASS | sha256sum | perl -lane 'print substr($F[0],0,3)')"
 }
 
+if [[ $# -le 1 ]] ;then
+  print_usage  "Need ACTION"
+fi
+
+ACTION=$1 ; shift
+ 
 for i in $* ;do # PROCESS OPTIONS
   case $i in
   -*)
     case $i in
-      -a=c)   ACTION=c ;;
-      -a=d)   ACTION=d ;;
       -w)     OVERWRITE=1 ;;
       -gpg=*) GPG=${1#-gpg=} ;;
       -e=*)   OUTEXT=${1#-e=} ;;
@@ -72,21 +73,18 @@ for i in $* ;do # PROCESS OPTIONS
       -v)     VERBOSE=1 ;;
       -0)     GPG=$GPG_DRY ;;
       -debug) set -x ;;
-      *)      print_usage "Unknown option $i" ;;
+      -*)      print_usage "Unknown option $i" ;;
     esac
     shift ;;
   *) break ;;
   esac
 done
 
-if [[ $# == 0 ]] ;then
-  print_usage No files to process?
-fi
-
 if [[ -z "$OUTEXT" ]] ;then
   case $ACTION in
     c) OUTEXT=.gpg ;;
     d) OUTEXT=.txt ;;
+    *) print_usage "Unsupported action $ACTION"
   esac
 fi
 
@@ -108,7 +106,9 @@ for INFILE in $* ;do
   if [[ "$INFILE" == "$OUTFILE" ]] ;then
     print_usage "Same OUTFILE==INFILE=$INFILE"
   fi
+
   get_pass
+
   case $ACTION in
   c) echo "$GPASS" |
     $GPG --passphrase-fd 0 --batch --yes -c -q --output "$OUTFILE" "$INFILE"
@@ -116,6 +116,5 @@ for INFILE in $* ;do
   d) echo "$GPASS" |
     $GPG --passphrase-fd 0 --batch --yes -d -q --output "$OUTFILE" "$INFILE"
     ;;
-  *) print_usage "ACTION $ACTION not supported" ;;
   esac
 done
