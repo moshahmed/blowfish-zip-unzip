@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 # What: 7z/zip using idrsa public key
-# $Header: c:/cvs/repo/mosh/perl/7z-ssl.sh,v 1.65 2017-10-29 14:56:10 a Exp $
+# $Header: c:/cvs/repo/mosh/perl/7z-ssl.sh,v 1.66 2017-11-01 10:32:18 a Exp $
 # GPL(C) moshahmed/at/gmail
 # from: https://travis-ci.org/okigan/e7z
 #   see https://wiki.openssl.org/index.php/Command_Line_Utilities
@@ -16,7 +16,7 @@ CMD=${0##*\\}
 
 function usage() {
   keyfile=\$HOME/.ssh/id_rsa
-  pemfile=$keyfile
+  pemfile=$keyfile.pem.pub
 1>&2 echo "
 What: $CMD [Options] [Actions] [archive] [args] .. 7z/zip encrypt args into archive with openssl id_rsa
 Actions:
