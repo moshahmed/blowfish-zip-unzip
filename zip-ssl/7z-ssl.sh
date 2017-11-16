@@ -114,8 +114,7 @@ case $action in
       *.zip)
         zip -j           $archive $otpfile
         zip -u -P "$otp" $archive $args
-        # unzip -lv $archive
-        7z l $archive
+        unzip -lv $archive
         ;;
       *.gtz)
         if [[ -z "$otp" ]] ;then
@@ -129,14 +128,16 @@ case $action in
     warn "Wrote $archive"
     ;;
   x) need_file $archive
-    # Extract otp from archive using keyfile
-    case $archive in
-      *.7z) otp=$(7z x -so $archive $otpfile_base | openssl pkeyutl -decrypt -inkey $keyfile ) ;;
-      *.zip) otp=$(unzip -p $archive $otpfile_base | openssl pkeyutl -decrypt -inkey $keyfile ) ;;
-      *.gtz) if [[ -z "$otp" ]] ;then
-              read -s -p "gpg password:" otp
-            fi ;;
+    if [[ -z "$otp" ]] ;then
+      # Extract otp from archive using keyfile
+      case $archive in
+        *.7z ) otp=$(7z x -so $archive $otpfile_base | openssl pkeyutl -decrypt -inkey $keyfile ) ;;
+        *.zip) otp=$(unzip -p $archive $otpfile_base | openssl pkeyutl -decrypt -inkey $keyfile ) ;;
+        *.gtz) if [[ -z "$otp" ]] ;then
+                read -s -p "gpg password:" otp
+              fi ;;
       esac
+    fi
     if [[ -z "$otp" ]] ;then
       die "No otp in $archive/$otpfile"
     fi
