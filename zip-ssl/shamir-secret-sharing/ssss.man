@@ -1,0 +1,100 @@
+ssss(1)                     General Commands Manual                    ssss(1)
+
+
+
+NAME
+       ssss - Split and Combine Secrets using Shamir's Secret Sharing Scheme.
+
+SYNOPSIS
+       ssss-split  -t threshold -n shares [-w token] [-s level] [-x] [-q] [-Q]
+       [-D] [-v]
+
+       ssss-combine -t threshold [-x] [-q] [-Q] [-D] [-v]
+
+DESCRIPTION
+       ssss is an implementation of Shamir's Secret Sharing Scheme.  The  pro-
+       gram  suite does both: the generation of shares for a known secret, and
+       the reconstruction of a secret using user-provided shares.
+
+COMMANDS
+       ssss-split: prompt the user for a secret and generate a set  of  corre-
+       sponding shares.
+
+       ssss-combine: read in a set of shares and reconstruct the secret.
+
+OPTIONS
+       -t threshold
+              Specify  the  number  of  shares  necessary  to  reconstruct the
+              secret.
+
+       -n shares
+              Specify the number of shares to be generated.
+
+       -w token
+              Text token to name shares in order to avoid  confusion  in  case
+              one  utilizes  secret  sharing  to  protect  several independent
+              secrets. The generated shares are prefixed by these tokens.
+
+       -s level
+              Enforce the scheme's  security  level  (in  bits).  This  option
+              implies  an  upper  bound  for  the  length of the shared secret
+              (shorter secrets are padded). Only multiples of 8 in  the  range
+              from  8  to 1024 are allowed. If this option is ommitted (or the
+              value given is 0) the security  level  is  chosen  automatically
+              depending  on  the  secret's length. The security level directly
+              determines the length of the shares.
+
+       -x     Hex mode: use hexadecimal digits in place  of  ASCII  characters
+              for  I/O.  This  is  useful if one wants to protect binary data,
+              like block cipher keys.
+
+       -q     Quiet mode: disable all unnecessary output. Useful in scripts.
+
+       -Q     Extra quiet mode: like -q, but also suppress warnings.
+
+       -D     Disable the diffusion layer added in version 0.2. This option is
+              needed  when  shares are combined that where generated with ssss
+              version 0.1.
+
+       -v     Print version information.
+
+EXAMPLE
+       In case you want to protect your login  password  with  a  set  of  ten
+       shares  in  such a way that any three of them can reconstruct the pass-
+       word, you simply run the command
+
+       ssss-split -t 3 -n 10 -w passwd
+
+       To reconstruct the password pass three of the generated shares (in  any
+       order) to
+
+       ssss-combine -t 3
+
+NOTES
+       To  protect a secret larger than 1024 bits a hybrid technique has to be
+       applied: encrypt the secret with a block cipher and apply secret  shar-
+       ing to just the key. Among others openssl and gpg can do the encryption
+       part:
+
+       openssl bf -e < file.plain > file.encrypted
+
+       gpg -c < file.plain > file.encrypted
+
+SECURITY
+       ssss tries to lock its virtual address space into RAM for privacy  rea-
+       sons. But this may fail for two reasons: either the current uid doesn't
+       permit page locking, or the RLIMIT_MEMLOCK is set too low. After print-
+       ing  a warning message ssss will run even without obtaining the desired
+       mlock.
+
+AUTHOR
+       This software (v0.5) was written in 2006  by  B.  Poettering  (ssss  AT
+       point-at-infinity.org).   Find  the  newest  version  of  ssss  on  the
+       project's homepage: http://point-at-infinity.org/ssss/.
+
+FURTHER READING
+       http://en.wikipedia.org/wiki/Secret_sharing
+
+
+
+Manuals                              User                              ssss(1)
