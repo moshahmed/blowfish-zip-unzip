@@ -6,11 +6,18 @@ CFLAGS = \
 
 all::
 	make clean
+	make exe
+	make test
+
+exe::
 	gcc -o ssss-split.exe $(CFLAGS) *.c -lgmp
 	cp -fv ssss-split.exe ssss-combine.exe
 
 test::
-	date | ./ssss-split -t 3 -n 5
+	@date | \
+	  ./ssss-split -q -t 30 -n 50  | \
+	  head -30 | \
+	  ./ssss-combine -q -t 30 \
 
 clean::
 	-rm -v ssss-*.exe

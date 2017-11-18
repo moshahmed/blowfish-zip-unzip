@@ -400,13 +400,13 @@ void split(void)
   int deg, i;
   for(fmt_len = 1, i = opt_number; i >= 10; i /= 10, fmt_len++);
   if (! opt_quiet) {
-    printf("Generating shares using a (%d,%d) scheme with ", 
+    fprintf(stderr,"Generating shares using a (%d,%d) scheme with ", 
 	   opt_threshold, opt_number);
     if (opt_security)
-      printf("a %d bit", opt_security);
+      fprintf(stderr,"a %d bit", opt_security);
     else
-      printf("dynamic");
-    printf(" security level.\n");
+      fprintf(stderr,"dynamic");
+    fprintf(stderr," security level.\n");
     
     deg = opt_security ? opt_security : MAXDEGREE;
     fprintf(stderr, "Enter the secret, ");
@@ -480,10 +480,10 @@ void combine(void)
 
   mpz_init(x);
   if (! opt_quiet)
-    printf("Enter %d shares separated by newlines:\n", opt_threshold);
+    fprintf(stderr,"Enter %d shares separated by newlines:\n", opt_threshold);
   for (i = 0; i < opt_threshold; i++) {
     if (! opt_quiet)
-      printf("Share [%d/%d]: ", i + 1, opt_threshold);
+      fprintf(stderr,"Share [%d/%d]: ", i + 1, opt_threshold);
   
     if (! fgets(buf, sizeof(buf), stdin))
       fatal("I/O error while reading shares");
