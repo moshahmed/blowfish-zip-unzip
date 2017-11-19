@@ -292,7 +292,7 @@ void decipher_block(uint32_t *v)
 }
 
 void encode_slice(uint8_t *data, int idx, int len, 
-		  void (*process_block)(uint32_t*))
+                  void (*process_block)(uint32_t*))
 {
   uint32_t v[2];
   int i;
@@ -361,26 +361,26 @@ int restore_secret(int n, mpz_t (*A)[n], mpz_t b[])
   for(i = 0; i < n; i++) {
     if (! mpz_cmp_ui(AA[i][i], 0)) {
       for(found = 0, j = i + 1; j < n; j++)
-	if (mpz_cmp_ui(AA[i][j], 0)) {
-	  found = 1;
-	  break;
-	}
+        if (mpz_cmp_ui(AA[i][j], 0)) {
+          found = 1;
+          break;
+        }
       if (! found) 
-	return -1;
+        return -1;
       for(k = i; k < n; k++) 
-	MPZ_SWAP(AA[k][i], AA[k][j]);
+        MPZ_SWAP(AA[k][i], AA[k][j]);
       MPZ_SWAP(b[i], b[j]);
     }
     for(j = i + 1; j < n; j++) {
       if (mpz_cmp_ui(AA[i][j], 0)) {
-	for(k = i + 1; k < n; k++) {
-	  field_mult(h, AA[k][i], AA[i][j]);
-	  field_mult(AA[k][j], AA[k][j], AA[i][i]);
-	  field_add(AA[k][j], AA[k][j], h);
-	}
-	field_mult(h, b[i], AA[i][j]);
-	field_mult(b[j], b[j], AA[i][i]);
-	field_add(b[j], b[j], h);
+        for(k = i + 1; k < n; k++) {
+          field_mult(h, AA[k][i], AA[i][j]);
+          field_mult(AA[k][j], AA[k][j], AA[i][i]);
+          field_add(AA[k][j], AA[k][j], h);
+        }
+        field_mult(h, b[i], AA[i][j]);
+        field_mult(b[j], b[j], AA[i][i]);
+        field_add(b[j], b[j], h);
       }
     }
   }
@@ -401,7 +401,7 @@ void split(void)
   for(fmt_len = 1, i = opt_number; i >= 10; i /= 10, fmt_len++);
   if (! opt_quiet) {
     fprintf(stderr,"Generating shares using a (%d,%d) scheme with ", 
-	   opt_threshold, opt_number);
+           opt_threshold, opt_number);
     if (opt_security)
       fprintf(stderr,"a %d bit", opt_security);
     else
@@ -499,12 +499,12 @@ void combine(void)
     if (! s) {
       s = 4 * strlen(b);
       if (! field_size_valid(s))
-	fatal("share has illegal length");
+        fatal("share has illegal length");
       field_init(s);
     }
     else
       if (s != 4 * strlen(b))
-	fatal("shares have different security levels");
+        fatal("shares have different security levels");
 
     if (! (j = atoi(a)))
       fatal("invalid share");
@@ -541,6 +541,21 @@ void combine(void)
   }
   field_deinit();
 }
+
+#define SSSS_OPTIONS \
+  "Options:        \n"\
+  "-t threshold shares for combining.        \n"\
+  "-n Split into n shares.                   \n"\
+  "-w token prefix                           \n"\
+  "-s level 0..1024                          \n"\
+  "-x hex                                    \n"\
+  "-q quiet                                  \n"\
+  "-Q more quiet                             \n"\
+  "-D disable diffusion of version 2.        \n"\
+  "-v print version                          \n"\
+
+#define SSSS_RCS \
+  "\n$Header: c:/cvs/repo/doc3/algo/num/ssss/ssss.c,v 1.5 2017-11-19 03:56:14 a Exp $\n"
 
 int main(int argc, char *argv[])
 {
@@ -597,12 +612,10 @@ int main(int argc, char *argv[])
   if (strstr(name, "split")) {
     if (opt_help || opt_showversion) {
       puts("Split secrets using Shamir's Secret Sharing Scheme.\n"
-	   "\n"
-	   "ssss-split -t threshold -n shares [-w token] [-s level]"
-	   " [-x] [-q] [-Q] [-D] [-v]"
-	   );
+        "Usage: ssss-split -t 3 -n 5 OPTIONS < secret.txt \n"
+        SSSS_OPTIONS);
       if (opt_showversion)
-	puts("\nVersion: " VERSION);
+        puts("\nVersion: " VERSION SSSS_RCS);
       exit(0);
     }
     
@@ -623,10 +636,10 @@ int main(int argc, char *argv[])
   else {
     if (opt_help || opt_showversion) {
       puts("Combine shares using Shamir's Secret Sharing Scheme.\n"
-	   "\n"
-	   "ssss-combine -t threshold [-x] [-q] [-Q] [-D] [-v]");
+        "ssss-combine -t threshold OPTIONS < t-of-n-secrets.txt\n"
+        SSSS_OPTIONS);
       if (opt_showversion)
-	puts("\nVersion: " VERSION);
+        puts("\nVersion: " VERSION SSSS_RCS);
       exit(0);
     }
 

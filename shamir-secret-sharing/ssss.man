@@ -53,7 +53,7 @@ OPTIONS
        -Q     Extra quiet mode: like -q, but also suppress warnings.
 
        -D     Disable the diffusion layer added in version 0.2. This option is
-              needed  when  shares are combined that where generated with ssss
+              needed  when  shares are combined that were generated with ssss
               version 0.1.
 
        -v     Print version information.
