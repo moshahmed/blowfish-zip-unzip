@@ -27,30 +27,30 @@ Encrypt single string 'hello' into 'xyzab':
 Decrypt single string 'xyzab' back into 'hello':
   $ python molock.py -d xxxab masterpass
 
-Encrypt all appkeys in a file with masterpass read from the keyboard
-  $ cat unlockedkeys.py
+Encrypt all appkeys in mykeys.py file with masterpass (read from the keyboard):
+  $ cat mykeys.py
     appkey="hello"
-  $ python molock.py -f unlockedkeys.py   lockedkeys.py enc keyboard
+  $ python molock.py -f mykeys.py   lkeys.py enc keyboard
     password:masterpass
-  $ cat lockedkeys.py
+  $ cat lkeys.py
     appkey="xxxab"
 
-Decrypt all keys in a given file with masterpass in env var:
-  $ export fkey=masterpass
-  $ python molock.py -f lockedkeys.py unlockedkeys.py dec '$fkey'
+Decrypt all keys in a lkeys.py file with masterpass in env var:
+  $ export mkey=masterpass
+  $ python molock.py -f lkeys.py mykeys.py dec '$mkey'
 
 Sample usage from python code:
-  $ cat unlockedkeys.py
+  $ cat mykeys.py
     appkey="hello"
-  $ export fkey=masterpass
-  $ python molock.py -f unlockedkeys.py lockedkeys.py  enc '$fkey'
-  $ cat lockedkeys.py
+  $ export mkey=masterpass
+  $ python molock.py -f mykeys.py lkeys.py  enc '$mkey'
+  $ cat lkeys.py
     appkey="xxxab"
   $ cat app.py
     from molock import decryptedkey
-    realkey = decryptedkey('appkey', passwd='$fkey', infile='lockedkeys.py')
+    realkey = decryptedkey('appkey', passwd='$mkey', infile='lkeys.py')
     # make python api calls with realkey ...
-  $ export fkey=masterpass
+  $ export mkey=masterpass
   $ python app.py
 '''
 
@@ -106,6 +106,10 @@ def encrypt_cred_file(infile, outfile, passwd, enc_or_dec='enc'):
     if not line:
       ofp.write('\n')
       continue
+    # Process lines matching:
+    #    =~ m/(    )(VAR  =")(VALUE)("                  )/
+    #    = /(before)(varname)             (passin)(after)/
+    #    => (before)(varname)encrypt_token(passin)(after)/
     pattern = re.compile(
       r'^(?P<before>[\s#]{0,2})'
       r'(?P<varname>\w+=")'
@@ -124,7 +128,7 @@ def encrypt_cred_file(infile, outfile, passwd, enc_or_dec='enc'):
     ofp.write('%s%s%s%s\n' % (ab.group('before'), ab.group('varname'),passout,ab.group('after')))
   ofp.close()
 
-def decryptedkey(akey, passwd='$fkey', infile='credo.py'):
+def decryptedkey(akey, passwd='$mkey', infile='lkeys.py'):
   passwd = get_pass(passwd)
   for line in open(infile):
     if line[0] == '#':  # ignore comments
@@ -163,7 +167,7 @@ if __name__ == '__main__':
       log.basicConfig(format="%(levelname)s: %(message)s")
 
   if args.usage:
-    print(FERNET6_USAGE)
+    print(MOLOCK_USAGE)
     sys.exit()
 
   if args.enc:
