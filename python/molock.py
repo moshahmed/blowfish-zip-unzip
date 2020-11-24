@@ -15,8 +15,10 @@ iterations = 100_000
 
 MOLOCK_USAGE = '''
 What:
-  Encrypt a set of appkeys in a python file, to be decrypted only when needed with a masterpass.
-  masterpass can be a 'string', in an '$environment_variable' or to be read from 'keyboard'
+  Encrypt a set of appkeys in mykeys.py to lkeys.py file with a masterpass.
+  appkeys are decrypted from lkeys.py with masterpass at runtime only when needed.
+  The file lkeys.py can contain both encrypted and plaintext appkeys.
+  Here masterpass can be a 'string', in an '$environment_variable' or to be read from 'keyboard'
   From stackoverflow, additions GPL(C) moshahmed/at/gmail
 
 Usage:
@@ -36,6 +38,8 @@ Encrypt all appkeys in mykeys.py file with masterpass (read from the keyboard):
     appkey="xxxab"
 
 Decrypt all keys in a lkeys.py file with masterpass in env var:
+If the key is too short, it is assumed to be plain text, and returned as is.
+If the key cannot be decrypted, it throws an error and program stops.
   $ export mkey=masterpass
   $ python molock.py -f lkeys.py mykeys.py dec '$mkey'
 
