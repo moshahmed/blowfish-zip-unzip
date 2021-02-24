@@ -1,6 +1,7 @@
-import json, os, sys, getpass, argparse, datetime, re
+import os, sys, getpass, argparse, datetime, re
 import logging as log
 import secrets
+import pyotp
 
 from base64 import urlsafe_b64encode as b64e, urlsafe_b64decode as b64d
 from cryptography.fernet import Fernet
@@ -15,8 +16,9 @@ iterations = 100_000
 
 MOLOCK_USAGE = '''
 What:
-  Encrypt a set of appkeys in mykeys.py to lkeys.py file with a masterpass.
+  Encrypt a set of appkeys in a python file, to be decrypted only when needed with a masterpass.
   appkeys are decrypted from lkeys.py with masterpass at runtime only when needed.
+  masterpass can be a 'string', in an '$environment_variable' or to be read from 'keyboard'
   The file lkeys.py can contain both encrypted and plaintext appkeys.
   Here masterpass can be a 'string', in an '$environment_variable' or to be read from 'keyboard'
   From stackoverflow, additions GPL(C) moshahmed/at/gmail
@@ -148,6 +150,36 @@ def decryptedkey(akey, passwd='$mkey', infile='lkeys.py'):
   print('Cannot find akey=%s in file=%s' % (akey,infile))
   sys.exit(1)
 
+def get_totp(auser,adomain,passwd='$mkey', infile='lkeys.py'):
+  passwd = get_pass(passwd)
+  for line in open(infile):
+    if line[0] == '#':  # ignore comments
+      continue
+    # Only lines matching auser
+    ab = re.search(rf'^(.*{auser}.*)="(.+)"', line)
+    if not ab:
+      continue
+    bval = ab.group(2)
+    if len(bval) > 30:
+      aval_decrypted = decrypt_token(bval,passwd)
+    else:
+      log.info('auser %s value %s too small to decrypt?' % (auser, bval))
+    # aval_decrypted = adomain:totp_secret
+    # Only lines matching adomain
+    cd = re.search(rf'(.*{adomain}.*):(\S+)', aval_decrypted)
+    if not cd:
+      continue
+    totp_name = cd.group(1)
+    totp_secret = cd.group(2)
+
+    totp = pyotp.TOTP(totp_secret)
+    my_token = totp.now()
+    print("pytop for auser=%s, totp_name=%s is otp=%s" % (auser,totp_name,my_token))
+    return
+
+  print('Cannot find auser=%s adomain=%s in file=%s' % (auser, adomain,infile))
+  sys.exit(1)
+
 def get_args():
     parser = argparse.ArgumentParser(
       description='''# What: Protect strings in a python file with a master passwd''',
@@ -155,7 +187,8 @@ def get_args():
     parser.add_argument('-d', '--dec', nargs=2, help='decrypts TEXT PASSWD')
     parser.add_argument('-e', '--enc', nargs=2, help='encrypts TEXT PASSWD')
     parser.add_argument('-f', '--fileenc', nargs=4, help='enc_or_dec INFILE OUTFILE ENC_OR_DEC PASSWD')
-    parser.add_argument('-g', '--getdec', nargs=3, help= 'decrypts INFILE KEYNAME            PASSWD')
+    parser.add_argument('-g', '--getdec', nargs=3, help= 'decrypts INFILE KEYNAME PASSWD')
+    parser.add_argument('-t', '--totp', nargs=4, help= 'topt INFILE AUSER ADOMAIN PASSWD')
     parser.add_argument('-u', '--usage', help='show usage', action='store_true', default=False)
     parser.add_argument('-v', '--verbose', help='verbose', action='store_true', default=True)
     parser.parse_args()
@@ -198,6 +231,10 @@ if __name__ == '__main__':
     infile, keyname, passwd = args.getdec
     result = decryptedkey(keyname,passwd,infile)
     print("# infile:%s keyname:%s passwd:%s result:%s" % (infile, keyname, passwd, result))
+
+  elif args.totp:
+    infile, auser, adomain, passwd = args.totp
+    result = get_totp(auser,adomain,passwd,infile)
 
   else:
     print("Try --help")
