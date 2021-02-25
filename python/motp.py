@@ -160,7 +160,7 @@ def get_totp(auser,adomain,passwd='$mkey', infile='lkeys.py'):
       log.info('Skipping comment %d:%s.' % (lineno,line.rstrip()))
       continue
 
-    if re.match(rf'.+=".+"',line):
+    if re.match(rf'^.+=".+"\s*$',line):
       # Only lines matching auser
       ab = re.search(rf'^(.*{auser}.*)="(.+)"', line)
       if not ab:
@@ -180,13 +180,13 @@ def get_totp(auser,adomain,passwd='$mkey', infile='lkeys.py'):
     else:
       bval_decrypted = decrypt_token(bval,passwd)
 
-    if not re.match(r'.+:.+',bval_decrypted):
+    if not re.match(r'^.+:.+$',bval_decrypted):
       log.warn('No totp_name:totp_secret in %s on line %d' % (bval_decrypted,lineno))
       continue
     totp_name, totp_secret = bval_decrypted.rsplit(':', 1)
 
     # Only lines matching adomain
-    if not re.match(rf'{adomain}', totp_name):
+    if not re.match(rf'^.*{adomain}.*$', totp_name):
       log.info('skipping %s not matching %s on line %d' % (totp_name, adomain,lineno))
       continue
 
