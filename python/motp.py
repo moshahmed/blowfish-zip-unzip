@@ -152,33 +152,53 @@ def decryptedkey(akey, passwd='$mkey', infile='lkeys.py'):
 
 def get_totp(auser,adomain,passwd='$mkey', infile='lkeys.py'):
   passwd = get_pass(passwd)
+  lineno,found=0,0
   for line in open(infile):
-    if line[0] == '#':  # ignore comments
+    # ignore comments
+    lineno += 1
+    if re.match(rf'^\s*#',line):
+      log.info('Skipping comment %d:%s.' % (lineno,line.rstrip()))
       continue
-    # Only lines matching auser
-    ab = re.search(rf'^(.*{auser}.*)="(.+)"', line)
-    if not ab:
-      continue
-    bval = ab.group(2)
-    if len(bval) > 30:
-      aval_decrypted = decrypt_token(bval,passwd)
+
+    if re.match(rf'.+=".+"',line):
+      # Only lines matching auser
+      ab = re.search(rf'^(.*{auser}.*)="(.+)"', line)
+      if not ab:
+        log.info('Skipping line %d:%s not matching %s' % (lineno,line.rstrip(),auser))
+        continue
+      bval = ab.group(2)
     else:
-      log.info('auser %s value %s too small to decrypt?' % (auser, bval))
-    # aval_decrypted = adomain:totp_secret
-    # Only lines matching adomain
-    cd = re.search(rf'(.*{adomain}.*):(\S+)', aval_decrypted)
-    if not cd:
+      bval = line.rstrip()
+
+    # decrypt bval
+    if not bval:
+      log.info('Skip blank value on line %d' % (lineno))
       continue
-    totp_name = cd.group(1)
-    totp_secret = cd.group(2)
+    if len(bval) < 30:
+      log.warn('value %s too small to decrypt, using as is on line %d' % (bval,lineno))
+      bval_decrypted = bval
+    else:
+      bval_decrypted = decrypt_token(bval,passwd)
+
+    if not re.match(r'.+:.+',bval_decrypted):
+      log.warn('No totp_name:totp_secret in %s on line %d' % (bval_decrypted,lineno))
+      continue
+    totp_name, totp_secret = bval_decrypted.rsplit(':', 1)
+
+    # Only lines matching adomain
+    if not re.match(rf'{adomain}', totp_name):
+      log.info('skipping %s not matching %s on line %d' % (totp_name, adomain,lineno))
+      continue
 
     totp = pyotp.TOTP(totp_secret)
     my_token = totp.now()
     print("pytop for auser=%s, totp_name=%s is otp=%s" % (auser,totp_name,my_token))
-    return
+    found += 1
 
-  print('Cannot find auser=%s adomain=%s in file=%s' % (auser, adomain,infile))
-  sys.exit(1)
+  if found == 0:
+    print('Cannot find auser=%s adomain=%s in file=%s' % (auser, adomain,infile))
+    sys.exit(1)
+  return
 
 def get_args():
     parser = argparse.ArgumentParser(
