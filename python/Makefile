@@ -24,6 +24,7 @@ endif
 
 motp::
 	echo 'user1="aws:JBSWY3DPEHPK3PXP"' > $@.1.tmp
+	echo '       aws:JBSWY3DPEHPK3PXP' >> $@.1.tmp
 	python $@.py -v -f $@.1.tmp  $@.2.tmp enc fkey
 	python $@.py -v -f $@.2.tmp  $@.3.tmp dec fkey
 	python $@.py -v -g $@.2.tmp  user1        fkey
