@@ -11,7 +11,8 @@ ifeq ($(OS),Windows_NT)
   ifeq ($(VIRTUAL_ENV), )
       $(error "Need VIRTUAL_ENV, run:   .venv\scripts\activate.bat")
   endif
-  PYTHON=.venv/Scripts/python.exe
+  # PYTHON=.venv/Scripts/python.exe
+  PYTHON=$(VIRTUAL_ENV)/bin/python
 else
   ifeq ($(VIRTUAL_ENV), )
       $(error "Need VIRTUAL_ENV, run:   source .venv/bin/activate")

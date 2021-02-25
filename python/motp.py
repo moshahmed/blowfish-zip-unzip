@@ -109,10 +109,16 @@ def encrypt_cred_file(infile, outfile, passwd, enc_or_dec='enc'):
   print(    '# %s file %s to %s on %s with hash(pass)=%s..'   % (enc_or_dec,infile,outfile,todays,passwd256))
   ofp.write('# %s file %s to %s on %s with hash(pass)=%s..\n' % (enc_or_dec,infile,outfile,todays,passwd256))
   for line in open(infile):
-    if not line:
-      ofp.write('\n')
+    line = line.strip().replace('\n','')
+
+    # skip blank lines or comments
+    if not line or re.match(rf'^\s*$',line):
       continue
-    # Process lines matching:
+    if re.match(rf'^\s*#',line):
+      ofp.write(line+'\n')
+      continue
+
+    # Process lines matching, otherwise encrypt/decrypt whole line.
     #    =~ m/(    )(VAR  =")(VALUE)("                  )/
     #    = /(before)(varname)             (passin)(after)/
     #    => (before)(varname)encrypt_token(passin)(after)/
@@ -123,15 +129,25 @@ def encrypt_cred_file(infile, outfile, passwd, enc_or_dec='enc'):
       r'(?P<after>"\s*)$'
     )
     ab = re.search( pattern, line)
-    if not ab:
-      ofp.write(line)
-      continue
-    passin=ab.group('passin')
+
+    # Extract passin to process
+    if ab:
+      passin=ab.group('passin')
+    else:
+      passin=line
+
+    # encrypt or decrypt passin
     if enc_or_dec == 'enc':
       passout = encrypt_token(passin,passwd)
     else:
       passout = decrypt_token(passin,passwd)
-    ofp.write('%s%s%s%s\n' % (ab.group('before'), ab.group('varname'),passout,ab.group('after')))
+
+    # save passout to output file
+    if ab:
+      ofp.write('%s%s%s%s\n' % (ab.group('before'), ab.group('varname'),passout,ab.group('after')))
+    else:
+      ofp.write(passout+'\n')
+
   ofp.close()
 
 def decryptedkey(akey, passwd='$mkey', infile='lkeys.py'):
@@ -180,16 +196,22 @@ def get_totp(adomain, passwd='$mkey', infile='lkeys.py'):
       continue
     totp_name, totp_secret = bval_decrypted.rsplit(':', 1)
 
+
     # check totp_name matching adomain
     if not re.match(rf'^.*{adomain}.*$', totp_name):
-      log.info('skipping %s not matching %s on line %d' % (totp_name, adomain,lineno))
+      # log.info('skipping %s not matching %s on line %d' % (totp_name, adomain,lineno))
       continue
 
     # generate totp from totp_secret
-    totp = pyotp.TOTP(totp_secret)
-    my_token = totp.now()
-    print("pytop=%s  for %s" % (my_token,totp_name))
-    found += 1
+    try:
+      totp_secret = totp_secret.replace(' ','')
+      totp = pyotp.TOTP(totp_secret)
+      my_token = totp.now()
+      print("pytop=%s  for %s" % (my_token,totp_name))
+      found += 1
+    except:
+      log.warn('Bad seed:%s:%s.' % (totp_name, totp_secret))
+      continue
 
   if found == 0:
     print('Cannot find adomain=%s in file=%s' % (adomain,infile))
@@ -250,7 +272,7 @@ if __name__ == '__main__':
 
   elif args.totp:
     infile, adomain, passwd = args.totp
-    result = get_totp(adomain,passwd,infile)
+    get_totp(adomain,passwd,infile)
 
   else:
     print("Try --help")
