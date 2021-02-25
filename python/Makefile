@@ -26,7 +26,7 @@ motp::
 	python $@.py -v -f $@.1.tmp  $@.2.tmp enc fkey
 	python $@.py -v -f $@.2.tmp  $@.3.tmp dec fkey
 	python $@.py -v -g $@.2.tmp  user1        fkey
-	python $@.py -v -t $@.2.tmp  user1 aws    fkey
+	python $@.py -v -t $@.2.tmp  aws          fkey
 	tail -n +1 *.tmp
 	rm *.tmp
 

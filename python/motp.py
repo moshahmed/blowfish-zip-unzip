@@ -150,53 +150,49 @@ def decryptedkey(akey, passwd='$mkey', infile='lkeys.py'):
   print('Cannot find akey=%s in file=%s' % (akey,infile))
   sys.exit(1)
 
-def get_totp(auser,adomain,passwd='$mkey', infile='lkeys.py'):
+def get_totp(adomain, passwd='$mkey', infile='lkeys.py'):
   passwd = get_pass(passwd)
   lineno,found=0,0
   for line in open(infile):
-    # ignore comments
     lineno += 1
-    if re.match(rf'^\s*#',line):
-      log.info('Skipping comment %d:%s.' % (lineno,line.rstrip()))
+    line = line.strip().replace('\n','')
+
+    # skip blank lines or comments
+    if line == '' or re.match(rf'^\s*#',line):
       continue
 
-    if re.match(rf'^.+=".+"\s*$',line):
-      # Only lines matching auser
-      ab = re.search(rf'^(.*{auser}.*)="(.+)"', line)
-      if not ab:
-        log.info('Skipping line %d:%s not matching %s' % (lineno,line.rstrip(),auser))
-        continue
+    ab = re.search(rf'^(.*)="(.+)"', line)
+    if ab:
       bval = ab.group(2)
     else:
-      bval = line.rstrip()
+      bval = line
 
     # decrypt bval
-    if not bval:
-      log.info('Skip blank value on line %d' % (lineno))
-      continue
-    if len(bval) < 30:
-      log.warn('value %s too small to decrypt, using as is on line %d' % (bval,lineno))
-      bval_decrypted = bval
-    else:
+    try:
       bval_decrypted = decrypt_token(bval,passwd)
+    except:
+      log.info('Could not decrypt line %d="%s.."' % (lineno,bval[:10]))
+      continue
 
+    # split bval_decrypted into totp_name, totp_secret
     if not re.match(r'^.+:.+$',bval_decrypted):
       log.warn('No totp_name:totp_secret in %s on line %d' % (bval_decrypted,lineno))
       continue
     totp_name, totp_secret = bval_decrypted.rsplit(':', 1)
 
-    # Only lines matching adomain
+    # check totp_name matching adomain
     if not re.match(rf'^.*{adomain}.*$', totp_name):
       log.info('skipping %s not matching %s on line %d' % (totp_name, adomain,lineno))
       continue
 
+    # generate totp from totp_secret
     totp = pyotp.TOTP(totp_secret)
     my_token = totp.now()
-    print("pytop for auser=%s, totp_name=%s is otp=%s" % (auser,totp_name,my_token))
+    print("pytop=%s  for %s" % (my_token,totp_name))
     found += 1
 
   if found == 0:
-    print('Cannot find auser=%s adomain=%s in file=%s' % (auser, adomain,infile))
+    print('Cannot find adomain=%s in file=%s' % (adomain,infile))
     sys.exit(1)
   return
 
@@ -208,7 +204,7 @@ def get_args():
     parser.add_argument('-e', '--enc', nargs=2, help='encrypts TEXT PASSWD')
     parser.add_argument('-f', '--fileenc', nargs=4, help='enc_or_dec INFILE OUTFILE ENC_OR_DEC PASSWD')
     parser.add_argument('-g', '--getdec', nargs=3, help= 'decrypts INFILE KEYNAME PASSWD')
-    parser.add_argument('-t', '--totp', nargs=4, help= 'topt INFILE AUSER ADOMAIN PASSWD')
+    parser.add_argument('-t', '--totp', nargs=3, help= 'topt INFILE ADOMAIN PASSWD')
     parser.add_argument('-u', '--usage', help='show usage', action='store_true', default=False)
     parser.add_argument('-v', '--verbose', help='verbose', action='store_true', default=True)
     parser.parse_args()
@@ -253,8 +249,8 @@ if __name__ == '__main__':
     print("# infile:%s keyname:%s passwd:%s result:%s" % (infile, keyname, passwd, result))
 
   elif args.totp:
-    infile, auser, adomain, passwd = args.totp
-    result = get_totp(auser,adomain,passwd,infile)
+    infile, adomain, passwd = args.totp
+    result = get_totp(adomain,passwd,infile)
 
   else:
     print("Try --help")
