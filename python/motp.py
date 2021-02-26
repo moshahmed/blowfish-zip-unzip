@@ -18,44 +18,46 @@ MOLOCK_USAGE = '''
 What:
   Encrypt a set of appkeys in a python file, to be decrypted only when needed with a masterpass.
   appkeys are decrypted from lkeys.py with masterpass at runtime only when needed.
-  masterpass can be a 'string', in an '$environment_variable' or to be read from 'keyboard'
   The file lkeys.py can contain both encrypted and plaintext appkeys.
-  Here masterpass can be a 'string', in an '$environment_variable' or to be read from 'keyboard'
-  From stackoverflow, additions GPL(C) moshahmed/at/gmail
+  Masterpass can be a 'string', in an '$environment_variable' or to be read from 'keyboard'
+  Fernet from stackoverflow, additions GPL(C) moshahmed/at/gmail
 
 Usage:
 
 Encrypt single string 'hello' into 'xyzab':
-  $ python molock.py -e hello masterpass
+  $ python motp.py -e hello masterpass
+    xyzab
 
-Decrypt single string 'xyzab' back into 'hello':
-  $ python molock.py -d xxxab masterpass
+Decrypt single string 'xxxab' back to 'hello':
+  $ python motp.py -d xxxab masterpass
+    hello
 
-Encrypt all appkeys in mykeys.py file with masterpass (read from the keyboard):
-  $ cat mykeys.py
+Encrypt all appkeys in plaintext.py file with masterpass (read from the keyboard):
+  $ cat plaintext.py
     appkey="hello"
-  $ python molock.py -f mykeys.py   lkeys.py enc keyboard
+  $ python motp.py -f plaintext.py lkeys.py keyboard
     password:masterpass
   $ cat lkeys.py
     appkey="xxxab"
 
-Decrypt all keys in a lkeys.py file with masterpass in env var:
-If the key is too short, it is assumed to be plain text, and returned as is.
-If the key cannot be decrypted, it throws an error and program stops.
+Decrypt all keys in a lkeys.py file with masterpass (in env var):
+  If the input is too short, it is assumed to be plain text, and returned as is.
+  If the key cannot be decrypted, program throws an error.
   $ export mkey=masterpass
-  $ python molock.py -f lkeys.py mykeys.py dec '$mkey'
+  $ python motp.py -D lkeys.py /dev/tty '$mkey'
+    appkey="hello"
 
-Sample usage from python code:
-  $ cat mykeys.py
+Sample usage as python library from app.py:
+  $ cat plaintext.py
     appkey="hello"
   $ export mkey=masterpass
-  $ python molock.py -f mykeys.py lkeys.py  enc '$mkey'
+  $ python motp.py -f plaintext.py lkeys.py  '$mkey'
   $ cat lkeys.py
     appkey="xxxab"
   $ cat app.py
-    from molock import decryptedkey
-    realkey = decryptedkey('appkey', passwd='$mkey', infile='lkeys.py')
-    # make python api calls with realkey ...
+    import motp
+    realkey = motp.decryptedkey('appkey', passwd='$mkey', infile='lkeys.py')
+    # use realkey in api call
   $ export mkey=masterpass
   $ python app.py
 '''
@@ -67,7 +69,7 @@ def _derive_key(password: bytes, salt: bytes, iterations: int = iterations) -> b
         iterations=iterations, backend=backend)
     return b64e(kdf.derive(password))
 
-def encrypt_token(message: str, password: str, iterations: int = iterations) -> str:
+def _encrypt_token(message: str, password: str, iterations: int = iterations) -> str:
     salt = secrets.token_bytes(16)
     key = _derive_key(password.encode(), salt, iterations)
     return b64e(
@@ -78,7 +80,7 @@ def encrypt_token(message: str, password: str, iterations: int = iterations) -> 
         )
     ).decode()
 
-def decrypt_token(token: bytes, password: str) -> str:
+def _decrypt_token(token: bytes, password: str) -> str:
     decoded = b64d(token)
     salt, iter, token = decoded[:16], decoded[16:20], b64e(decoded[20:])
     iterations = int.from_bytes(iter, 'big')
@@ -98,16 +100,18 @@ def get_pass(passwd):
     sys.exit(1)
   return passwd
 
-def summary2(line, prefix=2):
+def summary_pass256(line, prefix=2):
   dig = sha256(line.encode('utf-8')).hexdigest()
   return dig[:prefix]
 
 def encrypt_cred_file(infile, outfile, passwd, enc_or_dec='enc'):
   todays = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
   ofp = open(outfile, "w")
-  passwd256 = summary2(passwd)
+
+  passwd256 = summary_pass256(passwd)
   print(    '# %s file %s to %s on %s with hash(pass)=%s..'   % (enc_or_dec,infile,outfile,todays,passwd256))
   ofp.write('# %s file %s to %s on %s with hash(pass)=%s..\n' % (enc_or_dec,infile,outfile,todays,passwd256))
+
   for line in open(infile):
     line = line.strip().replace('\n','')
 
@@ -121,7 +125,7 @@ def encrypt_cred_file(infile, outfile, passwd, enc_or_dec='enc'):
     # Process lines matching, otherwise encrypt/decrypt whole line.
     #    =~ m/(    )(VAR  =")(VALUE)("                  )/
     #    = /(before)(varname)             (passin)(after)/
-    #    => (before)(varname)encrypt_token(passin)(after)/
+    #    => (before)(varname)_encrypt_token(passin)(after)/
     pattern = re.compile(
       r'^(?P<before>[\s#]{0,2})'
       r'(?P<varname>\w+=")'
@@ -138,9 +142,9 @@ def encrypt_cred_file(infile, outfile, passwd, enc_or_dec='enc'):
 
     # encrypt or decrypt passin
     if enc_or_dec == 'enc':
-      passout = encrypt_token(passin,passwd)
+      passout = _encrypt_token(passin,passwd)
     else:
-      passout = decrypt_token(passin,passwd)
+      passout = _decrypt_token(passin,passwd)
 
     # save passout to output file
     if ab:
@@ -151,6 +155,7 @@ def encrypt_cred_file(infile, outfile, passwd, enc_or_dec='enc'):
   ofp.close()
 
 def decryptedkey(akey, passwd='$mkey', infile='lkeys.py'):
+  # exported library function
   passwd = get_pass(passwd)
   for line in open(infile):
     if line[0] == '#':  # ignore comments
@@ -159,14 +164,14 @@ def decryptedkey(akey, passwd='$mkey', infile='lkeys.py'):
     if ab:
       aval = ab.group(1)
       if len(aval) > 30:
-        aval = decrypt_token(aval,passwd)
+        aval = _decrypt_token(aval,passwd)
       else:
         log.info('akey %s value %s too small to decrypt?' % (akey, aval))
       return aval
   print('Cannot find akey=%s in file=%s' % (akey,infile))
   sys.exit(1)
 
-def get_totp(adomain, passwd='$mkey', infile='lkeys.py'):
+def show_totp(adomain, passwd='$mkey', infile='lkeys.py'):
   passwd = get_pass(passwd)
   lineno,found=0,0
   for line in open(infile):
@@ -185,7 +190,7 @@ def get_totp(adomain, passwd='$mkey', infile='lkeys.py'):
 
     # decrypt bval
     try:
-      bval_decrypted = decrypt_token(bval,passwd)
+      bval_decrypted = _decrypt_token(bval,passwd)
     except:
       log.info('Could not decrypt line %d="%s.."' % (lineno,bval[:10]))
       continue
@@ -222,13 +227,14 @@ def get_args():
     parser = argparse.ArgumentParser(
       description='''# What: Protect strings in a python file with a master passwd''',
       epilog='')
-    parser.add_argument('-d', '--dec', nargs=2, help='decrypts TEXT PASSWD')
-    parser.add_argument('-e', '--enc', nargs=2, help='encrypts TEXT PASSWD')
-    parser.add_argument('-f', '--fileenc', nargs=4, help='enc_or_dec INFILE OUTFILE ENC_OR_DEC PASSWD')
-    parser.add_argument('-g', '--getdec', nargs=3, help= 'decrypts INFILE KEYNAME PASSWD')
-    parser.add_argument('-t', '--totp', nargs=3, help= 'topt INFILE ADOMAIN PASSWD')
-    parser.add_argument('-u', '--usage', help='show usage', action='store_true', default=False)
-    parser.add_argument('-v', '--verbose', help='verbose', action='store_true', default=True)
+    parser.add_argument('-e', '--strenc',  nargs=2, help='encrypt_str  TEXT PASSWD')
+    parser.add_argument('-d', '--strdec',  nargs=2, help='decrypt_str  TEXT PASSWD')
+    parser.add_argument('-g', '--keydec',  nargs=3, help='decrypt_file INFILE KEYNAME PASSWD')
+    parser.add_argument('-D', '--filedec', nargs=3, help='decrypt_file INFILE OUTFILE PASSWD')
+    parser.add_argument('-f', '--fileenc', nargs=3, help='encrypt_file INFILE OUTFILE PASSWD')
+    parser.add_argument('-t', '--totp',    nargs=3, help= 'topt_domain INFILE ADOMAIN PASSWD')
+    parser.add_argument('-u', '--usage',   help='show usage', action='store_true', default=False)
+    parser.add_argument('-v', '--verbose', help='verbose',    action='store_true', default=False)
     parser.parse_args()
     args = parser.parse_args()
     return args
@@ -245,34 +251,42 @@ if __name__ == '__main__':
     print(MOLOCK_USAGE)
     sys.exit()
 
-  if args.enc:
-    dtoken, passwd = args.enc
+  if args.strenc:
+    dtoken, passwd = args.strenc
     passwd = get_pass(passwd)
-    etoken = encrypt_token(dtoken,passwd)
+    etoken = _encrypt_token(dtoken,passwd)
     print('# etoken(d=%s,p=%s)=\n"%s"' % (dtoken,passwd,etoken))
 
-  elif args.dec:
-    etoken, passwd = args.dec
+  elif args.strdec:
+    etoken, passwd = args.strdec
     passwd = get_pass(passwd)
-    dtoken = decrypt_token(etoken,passwd)
+    dtoken = _decrypt_token(etoken,passwd)
     print('# dtoken(e=%s,p=%s)=\n"%s"' % (etoken,passwd,dtoken))
 
   elif args.fileenc:
-    infile, outfile, enc_or_dec, passwd = args.fileenc
+    infile, outfile, passwd = args.fileenc
     passwd = get_pass(passwd)
     try:
-      encrypt_cred_file(infile,outfile,passwd,enc_or_dec)
+      encrypt_cred_file(infile,outfile,passwd,'enc')
     except:
-      print('Error processing file %s' % (infile))
+      print('fileenc Error %s' % (infile))
 
-  elif args.getdec:
-    infile, keyname, passwd = args.getdec
+  elif args.filedec:
+    infile, outfile, passwd = args.filedec
+    passwd = get_pass(passwd)
+    try:
+      encrypt_cred_file(infile,outfile,passwd,'dec')
+    except:
+      print('filedec Error %s' % (infile))
+
+  elif args.keydec:
+    infile, keyname, passwd = args.keydec
     result = decryptedkey(keyname,passwd,infile)
     print("# infile:%s keyname:%s passwd:%s result:%s" % (infile, keyname, passwd, result))
 
   elif args.totp:
     infile, adomain, passwd = args.totp
-    get_totp(adomain,passwd,infile)
+    show_totp(adomain,passwd,infile)
 
   else:
     print("Try --help")

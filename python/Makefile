@@ -23,12 +23,14 @@ endif
 
 
 motp::
-	echo 'user1="aws:JBSWY3DPEHPK3PXP"' > $@.1.tmp
-	echo '       aws:JBSWY3DPEHPK3PXP' >> $@.1.tmp
-	python $@.py -v -f $@.1.tmp  $@.2.tmp enc fkey
-	python $@.py -v -f $@.2.tmp  $@.3.tmp dec fkey
-	python $@.py -v -g $@.2.tmp  user1        fkey
-	python $@.py -v -t $@.2.tmp  aws          fkey
+	echo 'user1="aws1:JBSWY3DPEHPK3PXP"' > $@.1.tmp
+	echo '       aws2:JBSW Y3DP EHPK 3PXP' >> $@.1.tmp
+	echo '       aws3:ZZZZ Y3DP EHPK 3PXP' >> $@.1.tmp
+	python $@.py -v --fileenc $@.1.tmp  $@.2.tmp fkey
+	python $@.py -v --filedec $@.2.tmp  $@.3.tmp fkey
+	python $@.py -v --keydec  $@.2.tmp  user1        fkey
+	python $@.py -v --totp    $@.2.tmp  aws          fkey
+	# more *.tmp | cat -
 	tail -n +1 *.tmp
 	rm *.tmp
 
