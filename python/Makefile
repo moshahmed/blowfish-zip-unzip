@@ -34,6 +34,15 @@ motp::
 	tail -n +1 *.tmp
 	rm *.tmp
 
+gpgotp::
+	echo aws1:MZXW633PN5XW 6MZX   > $@.txt
+	echo aws2:ZZXW6 33PN5XW6MZX  >> $@.txt
+	echo aws3:MZXW6 33PN5XW 6MZX >> $@.txt
+	gpg -o $@.gpg --passphrase fkey --batch --yes -qc $@.txt
+	gpg           --passphrase fkey --batch --yes -qd $@.gpg | grep aws1
+	python $@.py aws1 $@.gpg fkey
+	rm $@.txt $@.gpg
+
 #@ PYTHON
 py-ver::
 	@echo PYTHON=$(PYTHON)
