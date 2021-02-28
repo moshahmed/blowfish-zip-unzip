@@ -62,3 +62,11 @@ gpg-otp::
 	python $@.py aws1 $@.gpg fkey
 	rm $@.txt $@.gpg
 
+gpg-grep::
+	echo line1  >  tmp.txt
+	echo line2 >>  tmp.txt
+	gpg -o tmp.gpg --passphrase xyz --batch --yes -qc tmp.txt
+	gpg            --passphrase xyz --batch --yes -qd tmp.gpg | grep line2
+	rm   tmp.txt
+	python gpg-grep.py l.*2 xyz tmp.gpg
+	rm tmp.gpg
