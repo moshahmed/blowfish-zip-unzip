@@ -6,16 +6,16 @@ import hmac, base64, struct, hashlib, time, re,sys
 import gnupg
 
 USAGE = '''
-# What: print topt for domain from seed in gpgotp.gpg file.
-Usage: python gpgotp.py domain gauth.gpg passwd
+What: print topt for domain from seed in gpg-otp.gpg file.
+Usage: python gpg-otp.py domain gauth.gpg passwd
 Example:
-  echo aws1:ZZZZZ 33PN5XW 6MZX  >  gpgotp.txt
-  echo aws2:MZXW6 33PN5XW 6MZX >>  gpgotp.txt
-  gpg -o gpgotp.gpg --passphrase xyz --batch --yes -qc gpgotp.txt
-  gpg               --passphrase xyz --batch --yes -qd gpgotp.gpg | grep aws1
+  echo aws1:ZZZZZ 33PN5XW 6MZX  >  gpg-otp.txt
+  echo aws2:MZXW6 33PN5XW 6MZX >>  gpg-otp.txt
+  gpg -o gpg-otp.gpg --passphrase xyz --batch --yes -qc gpg-otp.txt
+  gpg               --passphrase xyz --batch --yes -qd gpg-otp.gpg | grep aws1
     pass:xyz
-  rm gpgotp.txt
-  python gpgotp.py aws1 gpgotp.gpg keybboard
+  rm gpg-otp.txt
+  python gpg-otp.py aws1 gpg-otp.gpg keybboard
     pass:xyz
     |   716402 |  aws1 | 0 |
 '''
@@ -37,7 +37,7 @@ def print_totp(title,secret,whence=1):
         token = get_hotp_token(secret, intervals_no=i)
         print( "| %8s |  %s | %i | " % (token, title, i))
 
-def get_seeds(domain='aws',infile='gpgotp.gpg',passwd='fkey'):
+def get_seeds(domain='aws',infile='gpg-otp.gpg',passwd='fkey'):
     gpg = gnupg.GPG()
     ifp = open(infile, 'rb')
     dd = gpg.decrypt_file(ifp, passphrase=passwd)
