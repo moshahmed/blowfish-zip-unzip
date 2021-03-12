@@ -53,6 +53,16 @@ motp::
 	tail -n +1 *.tmp
 	rm *.tmp
 
+GPG=gpg
+FKEY= --passphrase fkey --batch --yes
+SEEDS= junk \n JBSW-Y3DP-EHPK-3PXP \n aws1:JBSW-Y3DP-EHPK-3PXP \n aws2:ZZXW6-33PN5X-W6MZX \n
+
+py-otp-gpg::
+	echo -e "$(SEEDS)" | $(GPG) -o $@.gpg $(FKEY) -c
+	$(GPG) -qd $(FKEY) $@.gpg | python py-otp.py aws1 -
+	@rm $@.gpg
+
+
 gpg-otp::
 	echo aws1:MZXW633PN5XW 6MZX   > $@.txt
 	echo aws2:ZZXW6 33PN5XW6MZX  >> $@.txt
