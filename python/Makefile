@@ -65,8 +65,10 @@ SEEDS= junk \n JBSW-Y3DP-EHPK-3PXP \n aws1:JBSW-Y3DP-EHPK-3PXP \n aws2:ZZXW6-33P
 
 py-otp::
 	@$(GPG) --version | grep GnuPG
-	echo -e "$(SEEDS)" | $(GPG) -o $@.gpg $(FKEY) -c
-	$(GPG) -qd $(FKEY) $@.gpg | python py-otp.py aws1 -
+	echo -e "$(SEEDS)" |\
+        $(GPG) -c  $(FKEY) -o $@.gpg
+	$(GPG) -qd $(FKEY)    $@.gpg |\
+        python py-otp.py aws1 -
 	@rm $@.gpg
 
 
