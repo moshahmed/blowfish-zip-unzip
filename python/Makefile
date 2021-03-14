@@ -40,6 +40,12 @@ tags::
 	  -R .
 
 #@ Programs
+test::
+	# python py-onetimepass.py
+	# python py-gauth.py
+	echo 'aws1/2021-03-12:JBSW-Y3DP-EHPK-3PXP' | python py-onetimepass.py aws1 -
+	echo 'aws1/2021-03-12:JBSW-Y3DP-EHPK-3PXP' | python py-gauth.py aws1 -
+	echo 'aws1/2021-03-12:JBSW-Y3DP-EHPK-3PXP' | python py-otp.py   aws1 -
 
 motp::
 	echo 'user1="aws1:JBSWY3DPEHPK3PXP"' > $@.1.tmp
@@ -57,7 +63,8 @@ GPG=gpg
 FKEY= --passphrase fkey --batch --yes
 SEEDS= junk \n JBSW-Y3DP-EHPK-3PXP \n aws1:JBSW-Y3DP-EHPK-3PXP \n aws2:ZZXW6-33PN5X-W6MZX \n
 
-py-otp-gpg::
+py-otp::
+	@$(GPG) --version | grep GnuPG
 	echo -e "$(SEEDS)" | $(GPG) -o $@.gpg $(FKEY) -c
 	$(GPG) -qd $(FKEY) $@.gpg | python py-otp.py aws1 -
 	@rm $@.gpg
