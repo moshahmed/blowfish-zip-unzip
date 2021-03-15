@@ -1,4 +1,4 @@
-ONETIMEPASS_USAGE='''
+PY_ONETIMEPASS_USAGE='''
 Usage:
 | Setup: install python3 and pip install onetimepass
 | from   https://github.com/tadeck/onetimepass
@@ -16,12 +16,19 @@ def get_pyotp(line, pattern=''):
   # Input line is NAME:SEED and PATTERN =~ LINE
   if pattern and not re.search(pattern,line):
     return
-  line = re.sub(r'^.*:', '', line)
+  qrcode = re.search(r'secret=(\w+)',line)
+  if qrcode:
+    line = qrcode.group(1)
+  else:
+    line = re.sub(r'^.*:', '', line)
   line = re.sub(r'\W+', '', line)
   if not line:
     return
-  otp = onetimepass.get_totp(line)
-  otp = "%06d" % otp # Leading zeroes in h cannot be ignored?
+  try:
+    otp = onetimepass.get_totp(line)
+    otp = "%06d" % otp # Leading zeroes in h cannot be ignored?
+  except:
+    return
   return otp
 
 def demo_pyotp():
@@ -37,8 +44,8 @@ def demo_pyotp():
 
 if __name__ == '__main__':
   if len(sys.argv) < 2:
+    print(PY_ONETIMEPASS_USAGE)
     demo_pyotp()
-    print(ONETIMEPASS_USAGE)
     sys.exit()
 
   pattern = sys.argv[1]
@@ -46,4 +53,4 @@ if __name__ == '__main__':
     otp = get_pyotp(line,pattern)
     # print("DEBUG: %s %s %s" % (otp,pattern,line))
     if otp:
-      print("%s %s" % (otp,pattern))
+      print(f'{otp} {pattern}')

@@ -28,11 +28,21 @@ def get_pyotp(line, pattern=''):
   # Input line is NAME:SEED and PATTERN =~ LINE
   if pattern and not re.search(pattern,line):
     return
-  line = re.sub(r'^.*:', '', line)
-  otp = get_totp_token(line)
-  return otp
+  qrcode = re.search(r'secret=(\w+)',line)
+  if qrcode:
+    line = qrcode.group(1)
+  else:
+    line = re.sub(r'^.*:', '', line)
+  line = re.sub(r'\W+', '', line)
+  if not line:
+    return
+  try:
+    otp = get_totp_token(line)
+    return otp
+  except:
+    return
 
-def totp_demo():
+def demo_totp():
     # Demo1
     seed = 'MZXW.633P N5XW-6MZX'
     print('# Demo of 10 single use tokens for seed=%s' % seed)
@@ -47,8 +57,8 @@ def totp_demo():
 
 if __name__ == '__main__':
   if len(sys.argv) < 2:
-    totp_demo()
     print(PY_GAUTH_USAGE)
+    demo_totp()
     sys.exit()
 
   pattern = sys.argv[1]
@@ -56,4 +66,4 @@ if __name__ == '__main__':
     otp = get_pyotp(line,pattern)
     # print("DEBUG: %s %s %s" % (otp,pattern,line))
     if otp:
-      print("%s %s" % (otp,pattern))
+      print(f'{otp} {pattern}')
