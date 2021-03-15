@@ -15,7 +15,8 @@ backend = default_backend()
 iterations = 100_000
 
 MOLOCK_USAGE = '''
-What:
+What: print otp for domain from seed in motp file.
+
   Encrypt a set of appkeys in a python file, to be decrypted only when needed with a masterpass.
   appkeys are decrypted from lkeys.py with masterpass at runtime only when needed.
   The file lkeys.py can contain both encrypted and plaintext appkeys.
@@ -25,7 +26,7 @@ What:
   Fernet from stackoverflow
   GPL(C) moshahmed/at/gmail
 
-Usage:
+Examples:
 
 Encrypt single string 'hello' into 'xyzab':
   $ python motp.py -e hello masterpass
@@ -42,6 +43,12 @@ Encrypt all appkeys in plaintext.py file with masterpass (from keyboard):
     password:masterpass
   $ cat lkeys.py
     appkey="xxxab"
+
+Encrypt plaintext.py with motp.py inside vim:
+  $ vim plaintext.py
+    :silent 1,$ !python motp.py --fileenc - - $fkey
+      fkey:masterpass
+    :w lkeys.py
 
 Decrypt all keys in a lkeys.py file with masterpass (in env var):
   If the input is too short, it is assumed to be plain text, and returned as is.
