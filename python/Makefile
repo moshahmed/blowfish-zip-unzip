@@ -43,9 +43,9 @@ tags::
 test::
 	# python py-onetimepass.py
 	# python py-gauth.py
-	echo 'aws1/2021-03-12:JBSW-Y3DP-EHPK-3PXP' | python py-onetimepass.py aws1 -
-	echo 'aws1/2021-03-12:JBSW-Y3DP-EHPK-3PXP' | python py-gauth.py aws1 -
-	echo 'aws1/2021-03-12:JBSW-Y3DP-EHPK-3PXP' | python py-otp.py   aws1 -
+	echo 'aws1/2021-03-12:JBSW-Y3DP-EHPK-3PXP' | python py-onetimepass.py aws1
+	echo 'aws1/2021-03-12:JBSW-Y3DP-EHPK-3PXP' | python py-gauth.py aws1
+	echo 'aws1/2021-03-12:JBSW-Y3DP-EHPK-3PXP' | python py-otp.py   aws1
 	echo 'QR-Code:otpauth://totp/aws1?secret=JBSWY3DPEHPK3PXP&issuer=self' | python py-otp.py ''
 
 motp::
