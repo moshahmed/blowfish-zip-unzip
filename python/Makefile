@@ -46,6 +46,7 @@ test::
 	echo 'aws1/2021-03-12:JBSW-Y3DP-EHPK-3PXP' | python py-onetimepass.py aws1 -
 	echo 'aws1/2021-03-12:JBSW-Y3DP-EHPK-3PXP' | python py-gauth.py aws1 -
 	echo 'aws1/2021-03-12:JBSW-Y3DP-EHPK-3PXP' | python py-otp.py   aws1 -
+	echo 'QR-Code:otpauth://totp/aws1?secret=JBSWY3DPEHPK3PXP&issuer=self' | python py-otp.py ''
 
 motp::
 	echo 'user1="aws1:JBSWY3DPEHPK3PXP"' > $@.1.tmp
