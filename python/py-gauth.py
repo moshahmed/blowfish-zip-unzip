@@ -34,6 +34,8 @@ def get_pyotp(line, pattern=''):
     seed = qrcode.group(2)
   elif re.match(r'^.+:.+$',line):
     name, seed = line.rsplit(':', 1)
+  else:
+    name, seed = '', line
 
   seed = re.sub(r'\W+', '', seed)
   if not seed:
