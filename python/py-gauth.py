@@ -27,20 +27,22 @@ def get_totp_token(seed):
 def get_pyotp(line, pattern=''):
   # Input line is NAME:SEED and PATTERN =~ LINE
   if pattern and not re.search(pattern,line):
-    return
-  qrcode = re.search(r'secret=(\w+)',line)
+    return None, None
+  qrcode = re.search(r'totp/(\w+).*secret=(\w+)',line)
   if qrcode:
-    line = qrcode.group(1)
-  else:
-    line = re.sub(r'^.*:', '', line)
-  line = re.sub(r'\W+', '', line)
-  if not line:
-    return
+    name = qrcode.group(1)
+    seed = qrcode.group(2)
+  elif re.match(r'^.+:.+$',line):
+    name, seed = line.rsplit(':', 1)
+
+  seed = re.sub(r'\W+', '', seed)
+  if not seed:
+    return None, None
   try:
-    otp = get_totp_token(line)
-    return otp
+    otp = get_totp_token(seed)
+    return otp, name
   except:
-    return
+    return None, None
 
 def demo_totp():
     # Demo1
@@ -63,7 +65,7 @@ if __name__ == '__main__':
 
   pattern = sys.argv[1]
   for line in sys.stdin:
-    otp = get_pyotp(line,pattern)
-    # print("DEBUG: %s %s %s" % (otp,pattern,line))
+    otp, name = get_pyotp(line,pattern)
+    # print(f'DEBUG: otp={otp}, pattern={pattern}, name={name}, line={line.rstrip()}')
     if otp:
-      print(f'{otp} {pattern}')
+      print(f'{otp} {name}')
