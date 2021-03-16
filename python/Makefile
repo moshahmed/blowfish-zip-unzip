@@ -30,28 +30,19 @@ py-ver::
 py-req::
 	@$(PYTHON) -m pip freeze > requirements36.txt
 
-tags::
-	ctags \
-	  --exclude=.git \
-	  --exclude=.venv \
-	  --exclude=.vscode  \
-	  --exclude=.idea \
-	  --exclude=__pycache__    \
-	  -R .
 
 #@ Programs
 test::
-	# python py-onetimepass.py
-	# python py-gauth.py
 	echo 'aws1/2021-03-12:JBSW-Y3DP-EHPK-3PXP' | python py-onetimepass.py aws1
 	echo 'aws1/2021-03-12:JBSW-Y3DP-EHPK-3PXP' | python py-gauth.py aws1
 	echo 'aws1/2021-03-12:JBSW-Y3DP-EHPK-3PXP' | python py-otp.py   aws1
+	echo 'DUMMY' | python py-otp.py         ''
 	echo 'QR-Code:otpauth://totp/aws1?secret=JBSWY3DPEHPK3PXP&issuer=self' | python py-otp.py ''
 
 motp::
-	echo 'user1="aws1:JBSWY3DPEHPK3PXP"' > $@.1.tmp
-	echo '       aws2:JBSW Y3DP EHPK 3PXP' >> $@.1.tmp
-	echo '       aws3:ZZZZ Y3DP EHPK 3PXP' >> $@.1.tmp
+	echo 'user1="aws1/2001-01-16:JBSWY3DPEHPK3PXP"' > $@.1.tmp
+	echo '       aws2/2011-02-16:JBSW Y3DP EHPK 3PXP' >> $@.1.tmp
+	echo '       aws3/2021-03-16:ZZZZ Y3DP EHPK 3PXP' >> $@.1.tmp
 	python $@.py -v --fileenc $@.1.tmp  $@.2.tmp fkey
 	python $@.py -v --filedec $@.2.tmp  $@.3.tmp fkey
 	python $@.py -v --keydec  $@.2.tmp  user1        fkey
