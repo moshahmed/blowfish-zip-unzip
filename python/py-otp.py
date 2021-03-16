@@ -38,7 +38,7 @@ import sys, re
 def get_pyotp(line, pattern=''):
   # Input line is NAME:SEED and PATTERN =~ LINE
   if pattern and not re.search(pattern,line):
-    return
+    return None, None
   qrcode = re.search(r'totp/(\w+).*secret=(\w+)',line)
   if qrcode:
     name = qrcode.group(1)
@@ -72,6 +72,6 @@ if __name__ == '__main__':
   pattern = sys.argv[1]
   for line in sys.stdin:
     otp, name = get_pyotp(line,pattern)
-    # print("DEBUG: %s %s %s" % (otp,pattern,line))
+    # print(f'DEBUG: otp={otp}, pattern={pattern}, name={name}, line={line.rstrip()}')
     if otp:
-      print("  %s %s" % (otp,name))
+      print(f'{otp} {name}')

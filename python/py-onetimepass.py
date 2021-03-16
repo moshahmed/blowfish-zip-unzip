@@ -12,24 +12,26 @@ import onetimepass
 import sys, re
 
 def get_pyotp(line, pattern=''):
-  # from py_otp.py
   # Input line is NAME:SEED and PATTERN =~ LINE
   if pattern and not re.search(pattern,line):
-    return
-  qrcode = re.search(r'secret=(\w+)',line)
+    return None, None
+  qrcode = re.search(r'totp/(\w+).*secret=(\w+)',line)
   if qrcode:
-    line = qrcode.group(1)
-  else:
-    line = re.sub(r'^.*:', '', line)
-  line = re.sub(r'\W+', '', line)
-  if not line:
-    return
+    name = qrcode.group(1)
+    seed = qrcode.group(2)
+  elif re.match(r'^.+:.+$',line):
+    name, seed = line.rsplit(':', 1)
+
+  seed = re.sub(r'\W+', '', seed)
+  if not seed:
+    return None, None
+
   try:
-    otp = onetimepass.get_totp(line)
+    otp = onetimepass.get_totp(seed)
     otp = "%06d" % otp # Leading zeroes in h cannot be ignored?
+    return otp, name
   except:
-    return
-  return otp
+    return None, None
 
 def demo_pyotp():
     # Demo1
@@ -39,8 +41,8 @@ def demo_pyotp():
     # Demo2
     pattern='aws1'
     line = pattern+':'+seed
-    otp = get_pyotp(line,pattern)
-    print(f'| onetimepass for {pattern}:{otp}')
+    otp, name = get_pyotp(line,pattern)
+    print(f'| onetimepass for {name}:{otp}')
 
 if __name__ == '__main__':
   if len(sys.argv) < 2:
@@ -50,7 +52,7 @@ if __name__ == '__main__':
 
   pattern = sys.argv[1]
   for line in sys.stdin:
-    otp = get_pyotp(line,pattern)
-    # print("DEBUG: %s %s %s" % (otp,pattern,line))
+    otp, name = get_pyotp(line,pattern)
+    # print(f'DEBUG: otp={otp}, pattern={pattern}, name={name}, line={line.rstrip()}')
     if otp:
-      print(f'{otp} {pattern}')
+      print(f'{otp} {name}')
