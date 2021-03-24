@@ -15,7 +15,8 @@ backend = default_backend()
 iterations = 100_000
 
 MOLOCK_USAGE = '''
-What: print otp for domain from seed in motp file.
+What: Protect strings in a python file with a master passwd
+  and print otp for domain from seed in motp file.
 
   Encrypt a set of appkeys in a python file, to be decrypted only when needed with a masterpass.
   appkeys are decrypted from lkeys.py with masterpass at runtime only when needed.
@@ -216,10 +217,11 @@ def show_totp(adomain, passwd='$mkey', infile='lkeys.py'):
     lineno += 1
     line = line.strip().replace('\n','')
 
-    # skip blank lines or comments
-    if line == '' or re.match(rf'^\s*#',line):
+    # Skip blank lines or comments
+    if line == '' or re.match(rf'^\s*[#;!]',line):
       continue
 
+    # line =~ name="fernet_encrypted_variable"
     ab = re.search(rf'^(.*)="(.+)"', line)
     if ab:
       bval = ab.group(2)
@@ -240,7 +242,7 @@ def show_totp(adomain, passwd='$mkey', infile='lkeys.py'):
     totp_name, totp_secret = bval_decrypted.rsplit(':', 1)
 
     # check totp_name matching adomain
-    if not re.match(rf'^.*{adomain}.*$', totp_name):
+    if adomain and not re.match(rf'^.*{adomain}.*$', totp_name):
       # log.info('skipping %s not matching %s on line %d' % (totp_name, adomain,lineno))
       continue
 
@@ -249,7 +251,7 @@ def show_totp(adomain, passwd='$mkey', infile='lkeys.py'):
       totp_secret = totp_secret.replace(' ','')
       totp = pyotp.TOTP(totp_secret)
       my_token = totp.now()
-      print("pytop=%s  for %s" % (my_token,totp_name))
+      print("  %6s %s" % (my_token,totp_name))
       found += 1
     except:
       log.warn('Bad seed:%s:%s.' % (totp_name, totp_secret))
@@ -262,8 +264,9 @@ def show_totp(adomain, passwd='$mkey', infile='lkeys.py'):
 
 def g_args_parse():
     parser = argparse.ArgumentParser(
-      description='''# What: Protect strings in a python file with a master passwd''',
-      epilog='')
+      description='What: Protect strings in a python file with a master passwd',
+      epilog=MOLOCK_USAGE,
+      formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('-e', '--strenc',  nargs=2, help='encrypt_str  TEXT PASSWD')
     parser.add_argument('-d', '--strdec',  nargs=2, help='decrypt_str  TEXT PASSWD')
     parser.add_argument('-g', '--keydec',  nargs=3, help='decrypt_file INFILE KEYNAME PASSWD')
