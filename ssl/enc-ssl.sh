@@ -18,9 +18,11 @@ echo Generating PASSPHRASE in $SSH_PAS_PHR
 PASSPHRASE=P-$(openssl rand -base64 8| tr -dc 'a-zA-Z0-9'| cut -c1-8)
 echo -n $PASSPHRASE > $SSH_PAS_PHR
 
-echo Generate private key with pass:$PASSPHRASE, must be PEM RSA key.
+echo Generate private key $SSH_PRV_KEY must be PEM RSA key, with pass:$PASSPHRASE
 openssl genrsa -out $SSH_PRV_KEY -aes128 -passout pass:$PASSPHRASE 2048
 # ssh-keygen -m PEM -t rsa -b 2048 -C "your_email@example.com" -P $PASSPHRASE -f $SSH_PRV_KEY
+
+echo Extract pub pkcs8 key $SSH_PKS_KEY from private key
 ssh-keygen -e -f $SSH_PRV_KEY -m PKCS8 -P $PASSPHRASE > $SSH_PKS_KEY
 
 FILE_TXT=test.txt
@@ -30,7 +32,7 @@ FILE_SIG=test.sign
 
 date > $FILE_TXT
 
-# Encrypt with public key and descrypt with private key:
+# Encrypt with public key and decrypt with private key:
 echo Encrypting $FILE_TXT to $FILE_ENC
 openssl pkeyutl -encrypt -pubin -inkey $SSH_PKS_KEY -in $FILE_TXT -out $FILE_ENC
 
