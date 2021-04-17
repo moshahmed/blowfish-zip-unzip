@@ -1,13 +1,10 @@
 # What: How to sign, verify signature, encrypt, decrypt using openssl and ssh keys:
 # Date 2021-04-15 Thu 19:36
 
-## passwords not used below
-PASSPHRASE=$(openssl rand -hex 12)
 # PASSPHRASE=$(shuf -zer -n20  {A..Z} {a..z} {0..9})
 # PASSPHRASE=$(apn -n 1)
 # PASSPHRASE=$(openssl rand -base64 12)
-# PASSPHRASE=''
-# openssl -passin pass:$PASSPHRASE
+PASSPHRASE=$(openssl rand -hex 12)
 
 # Needs ssh keys:
 SSH_PRV_KEY=demokeys.pem # id_rsa
