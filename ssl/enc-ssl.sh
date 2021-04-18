@@ -28,7 +28,7 @@ echo -n $PASSPHRASE > $SSH_PAS_PHR
 echo Generate private key $SSH_PRV_KEY must be PEM RSA key, with pass:$PASSPHRASE
 rm -f $SSH_PRV_KEY
 # openssl genrsa -out $SSH_PRV_KEY -aes128 -passout pass:$PASSPHRASE 2048
-ssh-keygen -m PEM -t rsa -b 2048 -C "mosh@example.com" -P $PASSPHRASE -f $SSH_PRV_KEY
+ssh-keygen -m PEM -t rsa -b 2048 -C "linkedin/moshahmed" -P $PASSPHRASE -f $SSH_PRV_KEY
 
 echo Extract pub pkcs8 key $SSH_PKS_KEY from private key
 ssh-keygen -e -f $SSH_PRV_KEY -m PKCS8 -P $PASSPHRASE > $SSH_PKS_KEY
@@ -51,7 +51,7 @@ echo diff $FILE_DEC $FILE_TXT
 diff $FILE_DEC $FILE_TXT
 
 # Sign file with private key
-echo Sign $FILE_TXT
+echo Sign $FILE_TXT to $FILE_SIG
 openssl pkeyutl -sign -inkey $SSH_PRV_KEY -in $FILE_TXT -out $FILE_SIG -passin pass:$PASSPHRASE
 
 # Check sig with pks public key:
