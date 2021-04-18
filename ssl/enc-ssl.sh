@@ -16,6 +16,7 @@ echo Generating PASSPHRASE in $SSH_PAS_PHR
 # PASSPHRASE=$(apn -n 1)
 # PASSPHRASE=$(openssl rand -hex 8)
 PASSPHRASE=P-$(openssl rand -base64 8| tr -dc 'a-zA-Z0-9'| cut -c1-8)
+PASSPHRASE=abcde
 
 LANG=C LC_ALL=C PASSPHRASE_LEN=${#PASSPHRASE}
 if [[ "$PASSPHRASE_LEN" -lt 5 ]] ;then
@@ -25,8 +26,9 @@ fi
 echo -n $PASSPHRASE > $SSH_PAS_PHR
 
 echo Generate private key $SSH_PRV_KEY must be PEM RSA key, with pass:$PASSPHRASE
-openssl genrsa -out $SSH_PRV_KEY -aes128 -passout pass:$PASSPHRASE 2048
-# ssh-keygen -m PEM -t rsa -b 2048 -C "mosh@example.com" -P $PASSPHRASE -f $SSH_PRV_KEY
+rm -f $SSH_PRV_KEY
+# openssl genrsa -out $SSH_PRV_KEY -aes128 -passout pass:$PASSPHRASE 2048
+ssh-keygen -m PEM -t rsa -b 2048 -C "mosh@example.com" -P $PASSPHRASE -f $SSH_PRV_KEY
 
 echo Extract pub pkcs8 key $SSH_PKS_KEY from private key
 ssh-keygen -e -f $SSH_PRV_KEY -m PKCS8 -P $PASSPHRASE > $SSH_PKS_KEY
@@ -53,6 +55,6 @@ echo Sign $FILE_TXT
 openssl pkeyutl -sign -inkey $SSH_PRV_KEY -in $FILE_TXT -out $FILE_SIG -passin pass:$PASSPHRASE
 
 # Check sig with pks public key:
-echo Verify sign $FILE_SIG
+echo Verify with sigfile $FILE_SIG
 openssl pkeyutl -verify -pubin -inkey $SSH_PKS_KEY -in $FILE_TXT -sigfile $FILE_SIG
 
