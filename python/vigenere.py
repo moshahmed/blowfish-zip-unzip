@@ -17,8 +17,6 @@ def generate_key(message, key_word):
     key = []
     key_word_count = 0
     for x in range(0,len(message)):
-        # if message[x] == " ":
-        #     key.append(" ")
         if not message[x] in alphabets:
             key.append(message[x])
         else:
@@ -30,35 +28,28 @@ def generate_key(message, key_word):
 
 def encrypt_vigenere(message,key_word):
     key = generate_key(message,key_word)
-
     encrypted_text = ""
-
     for i in range(0,len(message)):
         if not message[i] in alphabets:
             encrypted_text += message[i]
         else:
             encryption_value = (alphabets.find(message[i]) + alphabets.find(key[i])) % alphalen
             encrypted_text += alphabets[encryption_value]
-
     return encrypted_text
 
 def decrypt_vigenere(message,key_word):
     key = generate_key(message,key_word)
-
     decrypted_text = ""
-
     for i in range(0,len(message)):
         if not message[i] in alphabets:
             decrypted_text += message[i]
         else:
             decryption_value = (alphabets.find(message[i]) - alphabets.find(key[i])) % alphalen
             decrypted_text += alphabets[decryption_value]
-
     return decrypted_text
 
 def random_string(chars=10,puncs=1,digits=3):
     str = ''
-    # string.ascii_uppercase + string.ascii_lowercase
     str += ''.join(random.choice(string.ascii_letters ) for i in range(chars))
     str += ''.join(random.choice(string.punctuation) for i in range(puncs))
     str += ''.join(random.choice(string.digits) for i in range(digits))
@@ -96,7 +87,6 @@ def vigenere_demo():
     message= random_string(40000,10,10)
     key_word = random_string(100,4,4)
     vigenere_show(message,key_word)
-
 
 if __name__ == '__main__':
     vigenere_demo()
