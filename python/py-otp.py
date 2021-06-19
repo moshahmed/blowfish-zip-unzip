@@ -35,18 +35,12 @@ Use with ccrypt:
   OR
   $ vim demo.txt.cpt
     pass:fkey
-    : '<,'> w ! python 'import pyotp,sys; print(pyotp.TOTP(sys.stdin.readline()).now())'
+    : . w ! python 'import pyotp,sys; print(pyotp.TOTP(sys.stdin.readline()).now())'
 Use from vim
-  $ echo ': command MoshGauthOtp : . w ! python py-otp.py' >> ~/.vimrc
   $ vim -x demo.txt
     pass:fkey
-      :/aws1
-      <CURSOR_ON_LINE> aws1:JBSW-Y3DP-EHPK-3PXP
-      : MoshGauthOtp
-      OR
-      : . w ! python py-otp.py aws1
-      OR <visual-select SEED>
-      : '<,'> w ! python py-otp.py aws1
+      aws1:JBSW-Y3DP-EHPK-3PXP
+      :call system("echo '".shellescape(getline('.'))."'|python gauth-pyotp.py .")
         | 332556 aws1
       :q
   $
