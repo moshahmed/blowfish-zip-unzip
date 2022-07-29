@@ -8,6 +8,7 @@
 function die()  { 1>&2 echo -e "$*" ; exit ;}
 function warn() { 1>&2 echo -e "$*"        ;}
 function info() { if [[ -n "$verbose" ]]; then 1>&2 echo "$*" ;fi ;}
+function need_exe(){ [[ -x "$(command -v $1)" ]] || die "Need_exe $1" ;}
 function need_file(){ test -f "$1" || die "need_file $*" ;}
 function need_dir(){  test -d "$1" || die "need_dir $*"  ;}
 function need_val(){  test -n "$1" || die "need_val $2"  ;}
@@ -27,15 +28,15 @@ else
   packer=7za
 fi
 
-[[ -x "$(command -v $packer)" ]] || die "Need $packer"
+need_exe $packer
 
 pubfile=$keyfile.pub
-otpfile=$TMP/otp.ssl # base64 encrypted otp with keyfile
+otpfile=$TMP/otp.ssl # encrypted otp with keyfile.
 archive=
 verbose=
 action=
 args=
- 
+
 function usage_7zs() {
   PASSPHRASE=abcde
 1>&2 echo "
@@ -59,7 +60,7 @@ Options:
       otp_to_otpfile: openssl pkeyutl -encrypt -pubin -inkey pubfile -base64
       otpfile_to_otp: openssl pkeyutl -decrypt        -inkey pubfile -base64
   -test      .. self test
-  -h, -v=1   .. help, verbose
+  -h, -v=1, -debug .. help, verbose, debug
 Example
 1 Pack with otp (in otpfile in archive locked with pubfile).
   > $CMD a archive.zip -r dir *.txt
@@ -71,8 +72,11 @@ Example
 }
 
 function test_7zs() {
+  TMP=$TMP/test_7zs
+  mkdir -p $TMP
+  cd $TMP || die "Need $TMP"
+  pwd
 
-  cd $TMP && echo "# PWD=$PWD" || die "Need $TMP"
   [[ -n  "$verbose" ]] && verbose=-v=1
   # OR $CMD a x.zip date.txt
   # extract, decrypt otp with ssh key (needs PASSPHRASE)
@@ -87,7 +91,7 @@ function test_7zs() {
   echo ""
   if [[ 0 < "${#PASSPHRASE}" && "${#PASSPHRASE}" < 5 ]] ;then
     echo "PASSPHRASE must be blank or more than 4 chars" ; exit
-  fi 
+  fi
 
   rm -f $keyfile $keyfile.pub
   echo "# 1.== Creating keyfile=$keyfile with PASSPHRASE=$PASSPHRASE"
@@ -118,8 +122,14 @@ function test_7zs() {
   unzip -lv date.zip | grep 202[0-9]
   echo "# diff" date*.txt
   diff date*.txt && echo "Success" || echo "Fail"
-  echo "# Cleanup"
-  rm -f date.7z date.zip date*.txt
+
+  if [[ "$debug" ]]; then
+    pwd ; ls -al .
+  else
+    echo "# Cleanup"
+    rm -f date.7z date.zip date*.txt
+  fi
+  exit
 }
 
 function makekey() {
@@ -140,7 +150,7 @@ while [ $# -gt 0 ]  ;do
     -makekey) shift; makekey $* ; exit ;;
     -haveotp) shift; haveotp=$1 ; need_file $haveotp haveotp
       need_file $keyfile keyfile
-      otp=$(base64 -d $haveotp | openssl pkeyutl -decrypt -inkey $keyfile ) 
+      otp=$(base64 -d $haveotp | openssl pkeyutl -decrypt -inkey $keyfile )
       need_val "$otp" otp
       info "# In $haveotp found otp=$otp"
       ;;
@@ -148,6 +158,7 @@ while [ $# -gt 0 ]  ;do
     -h) usage_7zs ;;
     -v) verbose=1 ;;
     -v=*) verbose=${1#-*=} ;;
+    -debug)   set -x; debug=1 ;;
     -*) usage_7zs "Unknown option '$1'" ;;
     # break after action, remaining args to archiver
     a) action=$1 ; archive=${2:?"Need archive"} ; shift 2; args=$* ; break ;;
