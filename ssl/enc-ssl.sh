@@ -1,6 +1,6 @@
 # What: How to sign, verify signature, encrypt, decrypt using openssl and ssh keys:
-# Date 2021-04-15 Thu 19:36
-
+# Date 2021-04-15
+# GPL(C) moshahmed/at/gmail
 
 # Needs ssh keys:
 SSH_PAS_PHR=demokeys.pas
