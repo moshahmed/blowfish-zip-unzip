@@ -186,7 +186,7 @@ case $file in
     if [[ -n "$kfile" ]] ;then
       [[ -f "$kfile" ]] || die "Need kfile=$kfile"
       if [[ -z "$PASS_7Z" ]] ;then
-        PASS_7Z=$(openssl rand -hex 32) # Generate random PASS_7Z, 32 bytes in hex, 256bits
+        PASS_7Z=$(openssl rand -hex 32) # Generate random PASS_7Z, 32 bytes = 64 hex = 1024bits
       fi
       # otpfile=encrypt PASS_7Z with kfile
       echo "$PASS_7Z" | openssl pkeyutl -encrypt -pubin -inkey $kfile | base64 > $otpfile
