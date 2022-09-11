@@ -7,7 +7,7 @@
 
 function die() { 1>&2 echo -e "$*" ; exit ;}
 function warn() { 1>&2 echo -e "$*"        ;}
-function info() { if [[ -n "$verbose" ]]; then 1>&2 echo "$*" ;fi ;}
+function info() { if [[ -n "$verbose" ]]; then 1>&2 echo -e "$*" ;fi ;}
 function need_exe(){ [[ -x "$(command -v $1)" ]] || die "Need_exe $1" ;}
 function need_file(){ test -f "$1" || die "need_file $*" ;}
 function need_dir(){  test -d "$1" || die "need_dir $*"  ;}
@@ -52,9 +52,9 @@ Eg2. > $CMD dir      => Pack into dir.7z
      > $CMD dir.7z   => Unpack into dir/..
 Eg3. Pack x.txt y.txt z.txt into x.7z with 7zip password=Yoyo
      > $CMD -0 -pYoyo x.txt y.txt z.txt
-Test Pack   y.txt z.txt otpfile=enc(otp,kfile) into y.7z
-     Unpack y.7z with otp=dec(otpfile,kfile with passphrase)
-     > $CMD -v -kfile=id_rsa.pem -test
+Test > $CMD -v -kfile=id_rsa.pem -test
+    1. Pack   y.txt z.txt otpfile=enc(otp,kfile.pub) into y.7z
+    2. Unpack y.7z with otp=dec(otpfile,kfile.pem with passphrase)
 "
 
 
@@ -71,7 +71,14 @@ function realpath2(){
 function test_7z_ssl(){
   testdir=$TMP/test1
   mkdir -p $testdir
-  cd $testdir || die "Missing $testdir" ; pwd
+  cd $testdir || die "Missing $testdir" ;
+
+  if [[ "$OS" =~ Windows* ]] ; then
+    PWD2=$(cygpath -wam .)
+  else
+    PWD2=$PWD
+  fi
+  echo PWD=$PWD2
 
   if [[ ! -f "$kfile" ]] ;then
     if [[ -z "$kfile" ]] ;then
@@ -95,7 +102,7 @@ function test_7z_ssl(){
     [[ $? != 0 ]] && die "ssh-keygen failed"
   fi
 
-  [[ -f "$kfile" ]] || die "Not a file $kfile"
+  [[ -f "$kfile" ]] || die "Need kfile=$kfile"
   file $kfile*
   echo "# Check passphrase of kfile=$kfile, showing pubkey"
   ssh-keygen -y -f $kfile || die "Cannot open $kfile"
@@ -104,7 +111,7 @@ function test_7z_ssl(){
   for i in 1 2 3 ;do date > date-$i.txt ;done
 
   echo "# Pack otpfile and date*.txt into date-1.7z"
-  bash $SCRIPT -kfile=$kfile.pub date*.txt
+  bash $SCRIPT -v -kfile=$kfile.pub date*.txt
   rm -rf date-1 date-[123].txt
   echo "# Listing date-1.7z"
   7z l date-1.7z | grep -P "(archive|[.]txt)"
@@ -150,6 +157,7 @@ case $file in
     archive=$file
     [[ -f $archive ]] || die "Missing archive $archive"
     output=${archive%.7z}
+    echo "Unpack $archive to $output"
     if [[ -n "$kfile" ]] ;then
       # Extract otpfile from archive to stdout, and decrypt PASS_7Z from otpfile with kfile
       [[ -f "$kfile" ]] || die "Need kfile=$kfile"
@@ -158,6 +166,8 @@ case $file in
       [[ -z "$PASS_7Z" ]] && die "Cannot get PASS_7Z from otpfile=$otpfile, kfile=$kfile, archive=$archive"
       # use 7z -pPASS_7Z to decrypt remaining archive
       packer="$packer -p$PASS_7Z"
+    else
+      die "Need -kfile kfile"
     fi
     # if archive has multiple files save in a dir
     count=$($packer l $archive| perl -lne 'print $1 if m/(\d+)\s+files/')
@@ -181,12 +191,15 @@ case $file in
       # otpfile=encrypt PASS_7Z with kfile
       echo "$PASS_7Z" | openssl pkeyutl -encrypt -pubin -inkey $kfile | base64 > $otpfile
       [[ -s $otpfile ]] || die "Invalid otpfile=$otpfile"
-      info "PASS_7Z=$PASS_7Z, otpfile=$otpfile=$(cat $otpfile)"
+      info "# PASS_7Z=$PASS_7Z"
+      info "# otpfile=$otpfile\n otpfile=[\n$(cat $otpfile)\n]" 
       # save otpfile to archive without password
       $packer a $archive $otpfile | grep -P "(Creating|Files|Archive)"
       rm -fv $otpfile
       # For remaining files, 7z encrypt with PASS_7Z into archive
       packer="$packer -p$PASS_7Z"
+    else
+      die "Need -kfile kfile.pub"
     fi
     if [[ -z "$DRY" ]] ;then
       $packer a $archive $file $* | grep Creating

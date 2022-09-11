@@ -44,28 +44,34 @@ What: $CMD [Options] Actions archive [args] paths .. pubkey encrypted archive.
 Actions:
   a .. Pack paths into archive encrypted with otp (one time password).
        Also pack otpfile (otp encrypted with ssh pubfile) into archive.
+  l .. list archive
   x .. Unpack files from archive (*.zip or *.7z)
        First extract otp=(otpfile from archive decrypted with ssh keyfile+PASSPHRASE),
        Then use otp to extract remaining files.
 Options:
-  -keyfile $keyfile     .. default
-  -pubfile $keyfile.pub .. default
+  -keyfile $keyfile     .. default private key keyfile.pem
+  -pubfile $keyfile.pub .. default public  key keyfile.pem.pub
   -makekey keyfile PASSPHRASE .. PASSPHRASE must be blank or more than 4 chars.
-    eg. -makekey test.pem $PASSPHRASE
-        ssh-keygen -m PEM -t rsa -b 4096 -P \"$PASSPHRASE\" -f test.pem -q
-        ssh-keygen -f test.pem -e -m PKCS8 -q > test.pem.pub
+    eg. -makekey keyfile.pem $PASSPHRASE
+        ssh-keygen -m PEM -t rsa -b 4096 -P \"$PASSPHRASE\" -f keyfile.pem -q
+        ssh-keygen -f keyfile.pem -e -m PKCS8 -q > keyfile.pem.pub
   -otp=read  .. ask user for otp
   -otp=pass  .. use this pass as otp, default is 256bit: openssl rand -hex 32
   -haveotp otpfile .. extract otp from otpfile and saves same otp in a new otpfile.
       otp_to_otpfile: openssl pkeyutl -encrypt -pubin -inkey pubfile -base64
-      otpfile_to_otp: openssl pkeyutl -decrypt        -inkey pubfile -base64
+      otpfile_to_otp: openssl pkeyutl -decrypt        -inkey keyfile -base64
   -test      .. self test
   -h, -v=1, -debug .. help, verbose, debug
 Example
-1 Pack with otp (in otpfile in archive locked with pubfile).
+1 Pack zip with otp=(in otpfile in archive locked with pubfile).
   > $CMD a archive.zip -r dir *.txt
-2 Unpack with otp=(in otpfile in archive)+keyfile+PASSPHRASE
+2 Unpack zip with otp=(in otpfile in archive)+keyfile+PASSPHRASE
   > $CMD x archive.zip
+3 Create keyfile to Pack(a=archive)/Unpack(x=extract)/List(l=list) archive
+  > $CMD -makekey keyfile.pem              .. passphrase=abcde
+  > $CMD -keyfile keyfile.pem a archive.7z -r [dir-or-files-to-pack eg. "*.txt"]
+  > $CMD -keyfile keyfile.pem l archive.7z .. List   archive, needs passphrase
+  > $CMD -keyfile keyfile.pem x archive.7z .. Unpack archive, needs passphrase
 "
   echo "$*"
   exit
@@ -135,8 +141,16 @@ function test_7zs() {
 function makekey() {
   keyfile=${1:?"Need keyfile name"}
   PASSPHRASE=${2}
-  ssh-keygen -m PEM -t rsa -b 4096 -C 7zs-$(date +%F) -P "$PASSPHRASE" -f $keyfile -q
-  ssh-keygen -f $keyfile -P "$PASSPHRASE" -e -m PKCS8 -q > $keyfile.pub
+  # PASSPHRASE=${2:?"Need passphrase"}
+  if [[ -n "$PASSPHRASE" ]] ;then
+    ssh-keygen -m PEM -t rsa -b 4096 -C 7zs-$(date +%F) -P "$PASSPHRASE" -f $keyfile -q
+    ssh-keygen -f $keyfile -P "$PASSPHRASE" -e -m PKCS8 -q > $keyfile.pub
+  else
+    # interactive, it will ask user for PASSPHRASE
+    ssh-keygen -m PEM -t rsa -b 4096 -C 7zs-$(date +%F)  -f $keyfile -q
+    ssh-keygen -f $keyfile  -e -m PKCS8 -q > $keyfile.pub
+  fi
+  ls -al $keyfile $keyfile.pub
 }
 
 # Options
@@ -161,8 +175,8 @@ while [ $# -gt 0 ]  ;do
     -debug)   set -x; debug=1 ;;
     -*) usage_7zs "Unknown option '$1'" ;;
     # break after action, remaining args to archiver
-    a) action=$1 ; archive=${2:?"Need archive"} ; shift 2; args=$* ; break ;;
-    x) action=$1 ; archive=${2:?"Need archive"} ; shift 2; args=$* ; break ;;
+    # x       ) action=$1 ; archive=${2:?"Need archive"} ; shift 2; args=$* ; break ;;
+    a | x | l ) action=$1 ; archive=${2:?"Need archive"} ; shift 2; args=$* ; break ;;
     *) usage_7zs "Unknown action:'$*'" ;;
   esac
   shift
@@ -189,6 +203,7 @@ case $action in
       info "# Generated otp=$otp"
     fi
     need_file $pubfile "\nDo: ssh-keygen -f $keyfile -e -m PKCS8 > $pubfile"
+    # encrypt(otp) into otpfile
     echo $otp |
       openssl pkeyutl -encrypt -pubin -inkey $pubfile | base64 > $otpfile
     need_file $otpfile
@@ -198,9 +213,10 @@ case $action in
     otpfile_base=$(basename $otpfile)
     case $archive in
       *.7z) cat $otpfile |
-        $packer a            $archive -si$otpfile_base
-        $packer u  -p$otp    $archive    $args
-        $packer l $archive
+             $packer a            $archive -si$otpfile_base
+        echo $packer u  -p$otp    $archive    $args
+             $packer u  -p$otp    $archive    $args
+             $packer l $archive
         ;;
       *.zip)
         zip -j           $archive $otpfile
@@ -211,7 +227,7 @@ case $action in
     need_file $archive
     warn "# Wrote $archive"
     ;;
-  x) need_file $archive
+  x | l) need_file $archive
     otpfile_base=$(basename $otpfile)
     if [[ -z "$otp" ]] ;then
       # Extract otp from archive using keyfile
@@ -219,8 +235,8 @@ case $action in
       otp=$($packer x -so $archive $otpfile_base | base64 -d | openssl pkeyutl -decrypt -inkey $keyfile )
     fi
     need_val "$otp" otp
-    info "# Decrypting $archive with otp=$otp"
-    $packer x $archive -p$otp $args -x!$otpfile_base
+    info "# Decrypting action=$action $archive with otp=$otp"
+    $packer $action $archive -p$otp $args -x!$otpfile_base
     ;;
   *) usage_7zs "Nothing to do '$action'?" ;;
 esac
